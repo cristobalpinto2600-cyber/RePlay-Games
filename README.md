@@ -2,18 +2,15 @@
 
 # Presentado por:
 
-- *[Nombre integrante 1]*
-- *[Nombre integrante 2]*
-- *[Nombre integrante 3]*
-- *[Nombre integrante 4]*
+- *Francisco Javier Reyes Villalón*
+- *Tomás Ignacio Moraga Gálvez*
+- *Cristóbal Jesús Pinto Quiroga*
+- *Marco Antonio Fernandoy Rojas*
 
-**Asignatura:** Ingeniería Web y Móvil · **Profesor:** Francisco Ponce · **Paralelo:** *[Completar]*
-**Entrega Parcial 1 (EP1)** — Diseño y estructura inicial · **Fecha de entrega:** 21-09-2026
-
-| | |
+|Tipo |Link |
 | :--- | :--- |
-| Repositorio | *[Agregar URL pública]* |
-| Prototipo en Figma | *[Agregar URL pública]* |
+| Repositorio | *https://github.com/cristobalpinto2600-cyber/Web-Proyecto* |
+| Prototipo en Figma | *agregar* |
 
 ## Índice
 

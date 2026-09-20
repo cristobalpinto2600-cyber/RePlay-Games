@@ -1,11 +1,20 @@
-# RePlay Games — Marketplace web y móvil para la compra y venta de videojuegos físicos de segunda mano
+# RePlay Games — Marketplace web y móvil para la compra y venta de videojuegos físicos nuevos o usados
 
 # Presentado por:
-
 - *Francisco Javier Reyes Villalón*
 - *Tomás Ignacio Moraga Gálvez*
 - *Cristóbal Jesús Pinto Quiroga*
 - *Marco Antonio Fernandoy Rojas*
+
+
+| Integrante | Responsabilidades EP1 |
+|------------|-----------------------|
+| Cristóbal Pinto | Diseño del prototipo UI/UX en Figma y definición de la apariencia general de la aplicación. |
+| Marco Fernandoy | Desarrollo de la estructura inicial del frontend utilizando Ionic + React. |
+| Tomás Moraga | Implementación de las vistas, componentes y navegación básica de la aplicación. |
+| Francisco Reyes | Elaboración y revisión de la documentación del README.md y organización del repositorio en GitHub. |
+
+Las decisiones generales de diseño, revisión del funcionamiento y validación de la entrega serán realizadas de manera colaborativa por todos los integrantes del equipo.
 
 |Tipo |Link |
 | :--- | :--- |

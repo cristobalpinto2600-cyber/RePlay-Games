@@ -1,0 +1,14 @@
+# Dependencias y artefactos de construcción
+node_modules/
+dist/
+
+# Variables de entorno (RNF-SEG-04: los secretos no se publican en el repositorio)
+.env
+.env.*
+!.env.example
+
+# Archivos del sistema operativo y de editores
+Thumbs.db
+.DS_Store
+.vscode/
+.idea/

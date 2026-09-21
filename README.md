@@ -28,7 +28,7 @@
 6. [Frontend con Ionic-React](#frontend-con-ionic-react)
 
 ## Justificación del problema
-
+| :--- | :--- |
 El comercio electrónico constituye un canal relevante en Chile. La Cámara de Comercio de Santiago
 informó que durante 2025 las ventas online bordearon los US$ 10 mil millones y crecieron 11,6 %
 nominal [1]. En este contexto, los videojuegos físicos usados pueden encontrarse en plataformas
@@ -55,7 +55,7 @@ información, facilite la comparación de publicaciones y entregue mayor trazabi
 venta de videojuegos físicos usados.
 
 **Consecuencias asociadas al problema:**
-
+| :--- | :--- |
 - Mayor tiempo de búsqueda al revisar publicaciones poco pertinentes.
 - Dificultad para comparar alternativas cuando cada vendedor describe el producto de forma distinta.
 - Mayor incertidumbre respecto del estado del juego y de la confiabilidad del vendedor.
@@ -63,7 +63,7 @@ venta de videojuegos físicos usados.
 - Menor trazabilidad cuando publicación, acuerdo y seguimiento de la operación quedan dispersos.
 
 ## Usuarios objetivo (Quién usará la aplicación)
-
+| :--- | :--- |
 El grupo objetivo son personas usuarias de consolas con formato físico interesadas en comprar o
 vender videojuegos de segunda mano. Una misma cuenta permite ambas acciones, por lo que los perfiles
 descritos a continuación representan momentos de uso y no cuentas distintas.
@@ -80,46 +80,39 @@ descritos a continuación representan momentos de uso y no cuentas distintas.
 | Accesibilidad | Interfaz legible, jerarquía clara, mensajes de error comprensibles, controles identificables y diseño responsivo. |
 | Seguridad y privacidad | Solicitar pocos datos personales, proteger las funciones según sesión/rol y evitar exponer información privada innecesaria. |
 
-### Personas compradoras
+Personas compradoras
+| :--- | :--- |
+Corresponde a jugadores y jugadoras que buscan videojuegos específicos para su consola y que suelen comparar distintas publicaciones antes de tomar una decisión de compra. Acceden principalmente desde dispositivos móviles, generalmente en sesiones breves, por lo que necesitan identificar con rapidez aspectos relevantes como el precio, el estado de conservación, la ubicación y la modalidad de entrega.
 
-Jugadores y jugadoras que buscan títulos concretos para su consola y que comparan varias
-publicaciones antes de decidir. Acceden principalmente desde el teléfono, en sesiones breves, y
-necesitan distinguir rápidamente qué publicación conviene según precio, estado y ubicación.
+Necesidades principales
+| :--- | :--- |
+Encontrar videojuegos compatibles con su consola mediante herramientas de búsqueda y filtros.
+Comparar publicaciones considerando criterios equivalentes, como precio, estado de conservación y modalidad de entrega.
+Revisar fotografías e información sobre la reputación de la persona vendedora antes de iniciar una compra.
+Guardar publicaciones de interés y realizar seguimiento al estado de las operaciones iniciadas.
 
-#### Necesidades principales
+Personas vendedoras
+| :--- | :--- |
+Corresponde a personas que poseen videojuegos físicos que ya no utilizan y que desean venderlos de manera ocasional. Generalmente utilizan el teléfono móvil para fotografiar y publicar sus productos, aunque pueden preferir el computador cuando necesitan administrar varias publicaciones al mismo tiempo.
 
-- Encontrar juegos compatibles con su consola mediante búsqueda y filtros.
-- Comparar precio, estado de conservación y modalidad de entrega con criterios equivalentes.
-- Revisar fotografías y la reputación de quien vende antes de iniciar una compra.
-- Guardar publicaciones de interés y hacer seguimiento de la operación iniciada.
+Necesidades principales
+| :--- | :--- |
+Publicar videojuegos mediante un proceso simple y guiado, con campos que ayuden a completar la información necesaria.
+Describir de manera clara el estado del producto, reduciendo dudas y consultas repetidas por parte de posibles compradores.
+Administrar sus publicaciones mediante acciones como editar, pausar, reactivar o eliminar.
+Recibir solicitudes de compra y realizar seguimiento a cada operación hasta su finalización.
 
-### Personas vendedoras
+Administración de la plataforma
+| :--- | :--- |
+Corresponde a las personas responsables de revisar reportes, moderar publicaciones y supervisar el cumplimiento de las reglas definidas para la plataforma. Su uso se concentra principalmente en computadores de escritorio o portátiles, ya que requieren visualizar suficiente información antes de tomar una decisión de moderación.
 
-Personas que conservan videojuegos que ya no utilizan y que publican de forma ocasional. Fotografían
-y publican desde el teléfono, pero prefieren el computador cuando administran varias publicaciones
-al mismo tiempo.
-
-#### Necesidades principales
-
-- Publicar en pocos pasos, con campos guiados que eviten descripciones incompletas.
-- Describir correctamente el estado del producto para reducir preguntas repetidas.
-- Administrar sus publicaciones: editar, pausar, reactivar o eliminar según corresponda.
-- Recibir solicitudes y hacer seguimiento hasta completar la operación.
-
-### Administración de la plataforma
-
-Personas encargadas de revisar reportes y moderar contenido. Trabajan principalmente desde
-computador de escritorio y requieren contexto suficiente para decidir y dejar registro de sus
-acciones.
-
-#### Necesidades principales
-
-- Revisar los reportes recibidos junto con la publicación asociada.
-- Mantener visible u ocultar una publicación mediante una acción confirmada.
-- Registrar la decisión tomada para mantener trazabilidad.
+Necesidades principales
+| :--- | :--- |
+Revisar los reportes recibidos junto con la información y el contexto de la publicación asociada.
+Mantener visible u ocultar una publicación mediante acciones claras y confirmadas.
+Registrar las decisiones tomadas durante la moderación para conservar la trazabilidad de las acciones realizadas.
 
 ## Roles del Sistema
-
 | Rol | Descripción |
 | :--- | :--- |
 | Usuario | Puede comprar y vender con una misma cuenta: explorar, publicar, administrar publicaciones, guardar favoritos, iniciar operaciones, calificar y reportar. |
@@ -127,205 +120,122 @@ acciones.
 
 ### Definición de conceptos
 
-**Rol:** conjunto de permisos y funcionalidades que el sistema habilita para un tipo de cuenta. El
-rol determina qué rutas puede abrir una persona y qué acciones puede ejecutar, con independencia de
-sus características personales.
+**Rol:** conjunto de permisos y funcionalidades que el sistema asigna a un tipo de usuario. Determina a qué vistas o rutas puede acceder y qué acciones puede realizar dentro de la plataforma.
 
-**Proto-persona:** perfil hipotético de usuario construido a partir de fuentes secundarias, análisis
-de soluciones existentes y supuestos razonados, que se utiliza para orientar decisiones de diseño
-cuando todavía no se dispone de investigación con usuarios reales.
+**Proto-persona:** perfil hipotético elaborado a partir de fuentes secundarias, análisis de soluciones existentes y supuestos razonados. Se utiliza para representar características, necesidades y contextos de uso probables cuando aún no se dispone de investigación directa con usuarios reales.
 
-> *Nota metodológica:* los siguientes perfiles son hipotéticos. No corresponden a entrevistas ni a
-> resultados obtenidos de usuarios reales.
+> *Nota metodológica:* los siguientes perfiles son hipotéticos y corresponden a una caracterización preliminar. No representan entrevistas ni resultados obtenidos directamente de usuarios reales.
 
 ### Proto-personas
 
-Se definen tres proto-personas que cubren los dos roles del sistema: dos usos del rol Usuario
-(compra y venta) y el rol Administrador.
+Se definen tres proto-personas que representan los principales contextos de uso de la aplicación: compra, venta y administración.
 
 ### Proto-persona 1: Sebastián — comprador frecuente
 
-#### Características generales
+**Características generales:** estudiante universitario de 23 años, jugador frecuente y usuario habitual de aplicaciones móviles y plataformas de compraventa.
 
-Estudiante universitario de 23 años, jugador frecuente y usuario habitual de aplicaciones móviles.
+**Necesidades y objetivos:** encontrar videojuegos compatibles con su consola, comparar publicaciones según precio, estado, fotografías y reputación del vendedor, guardar opciones de interés e iniciar una compra cuando encuentre una alternativa adecuada.
 
-#### Necesidades principales
+**Dificultades y funcionalidades asociadas:** puede enfrentarse a publicaciones incompletas, fotografías poco claras o descripciones poco precisas. Para resolver estas necesidades utilizaría principalmente el catálogo, buscador, filtros, detalle de publicación, favoritos, operaciones, calificaciones y reportes.
 
-Encontrar juegos físicos compatibles con su consola, comparar precio y estado, revisar fotografías y
-señales de confianza antes de comprometerse con una compra.
-
-#### Objetivos de uso
-
-Localizar un título, revisar alternativas, guardar favoritos e iniciar una compra.
-
-#### Dificultades o puntos de frustración
-
-Publicaciones incompletas, fotografías deficientes, información confusa sobre el estado del producto
-y vendedores sin referencias.
-
-#### Funcionalidades de la aplicación que utilizaría
-
-Catálogo, filtros, detalle de publicación, favoritos, operaciones, calificaciones y reportes.
-
-#### Dispositivo y contexto probable de acceso
-
-Principalmente smartphone, en consultas rápidas y en la revisión previa a una compra.
+**Dispositivo y contexto de acceso:** principalmente smartphone, utilizado para realizar consultas rápidas, revisar publicaciones y comparar alternativas antes de una compra.
 
 ### Proto-persona 2: Camila — vendedora ocasional
 
-#### Características generales
+**Características generales:** jugadora ocasional de 29 años que conserva videojuegos físicos que ya no utiliza y que desea venderlos de manera sencilla.
 
-Jugadora ocasional de 29 años que conserva juegos físicos que ya no utiliza; usa indistintamente
-smartphone y computador.
+**Necesidades y objetivos:** publicar juegos mediante un proceso simple, describir claramente su estado, administrar varias publicaciones y realizar seguimiento a cada operación hasta completarla.
 
-#### Necesidades principales
+**Dificultades y funcionalidades asociadas:** puede encontrar formularios extensos, consultas repetidas o dificultades para organizar varias publicaciones. Utilizaría principalmente las funciones de publicación, edición, gestión de publicaciones, operaciones, perfil y calificaciones.
 
-Publicar con pocos pasos, describir correctamente el estado del producto y gestionar sus ventas
-desde un mismo lugar.
-
-#### Objetivos de uso
-
-Crear una publicación clara, recibir una solicitud y hacer seguimiento hasta completar la operación.
-
-#### Dificultades o puntos de frustración
-
-Formularios extensos, repetición de preguntas por parte de interesados y dificultad para organizar
-varias publicaciones.
-
-#### Funcionalidades de la aplicación que utilizaría
-
-Publicar, editar y pausar publicaciones, mis publicaciones, operaciones, perfil y calificaciones.
-
-#### Dispositivo y contexto probable de acceso
-
-Teléfono para fotografiar y publicar; computador cuando administra varias publicaciones.
+**Dispositivo y contexto de acceso:** utiliza el teléfono móvil para fotografiar y publicar videojuegos, y el computador cuando necesita administrar varias publicaciones.
 
 ### Proto-persona 3: Daniel — administrador
 
-#### Características generales
+**Características generales:** persona adulta con experiencia básica a intermedia en el uso de herramientas administrativas y plataformas web.
 
-Adulto con experiencia básica o intermedia en herramientas administrativas web.
+**Necesidades y objetivos:** revisar reportes con suficiente contexto, evaluar publicaciones, tomar decisiones de moderación y mantener un registro de las acciones realizadas.
 
-#### Necesidades principales
+**Dificultades y funcionalidades asociadas:** puede enfrentarse a reportes con información insuficiente, acciones sensibles sin confirmación o falta de trazabilidad. Para estas tareas utilizaría el panel administrativo, la revisión de reportes, la moderación de publicaciones y la gestión de usuarios.
 
-Revisar reportes con contexto suficiente y aplicar acciones de moderación de manera controlada.
-
-#### Objetivos de uso
-
-Identificar el motivo del reporte, revisar la publicación asociada y registrar una decisión.
-
-#### Dificultades o puntos de frustración
-
-Reportes ambiguos, falta de confirmación en acciones sensibles y poca trazabilidad de lo realizado.
-
-#### Funcionalidades de la aplicación que utilizaría
-
-Panel administrativo, reportes, moderación de publicaciones y gestión de usuarios.
-
-#### Dispositivo y contexto probable de acceso
-
-Principalmente computador de escritorio o portátil.
+**Dispositivo y contexto de acceso:** principalmente computador de escritorio o portátil, ya que las tareas administrativas requieren revisar mayor cantidad de información.
 
 ## Requerimientos
 
 Los requerimientos funcionales no contabilizan el registro ni el inicio de sesión, ya que esas
 funciones se documentan como funcionalidades transversales.
 
-## Requerimientos Funcionales por Rol
+## Requerimientos
+
+Los requerimientos definidos a continuación describen las principales funcionalidades que deberá ofrecer la plataforma. De acuerdo con la pauta del proyecto, el registro y el inicio de sesión no se contabilizan como requerimientos funcionales principales, ya que se consideran funcionalidades transversales necesarias para el acceso y control de usuarios.
+
+## Requerimientos funcionales por rol
 
 | ID | Requerimiento funcional | Rol |
-| :--- | :--- | :--- |
-| RF-01 | **Explorar y filtrar catálogo.** El sistema deberá permitir visualizar las publicaciones disponibles y buscar o filtrar videojuegos por título, consola, género, rango de precio, estado de conservación y ubicación. | Usuario |
-| RF-02 | **Consultar detalle de publicación.** El sistema deberá permitir visualizar el detalle de una publicación, incluyendo fotografías, título, consola, género, precio, estado de conservación, descripción, ubicación, modalidad de entrega y datos públicos del vendedor. | Usuario |
-| RF-03 | **Publicar videojuego.** El sistema deberá permitir al usuario crear una publicación de un videojuego físico, ingresando los datos obligatorios definidos por la plataforma y fotografías del producto. | Usuario |
-| RF-04 | **Gestionar publicaciones propias.** El sistema deberá permitir al usuario editar, pausar, reactivar o eliminar sus propias publicaciones, siempre que el estado de la operación asociada lo permita. | Usuario |
-| RF-05 | **Gestionar favoritos.** El sistema deberá permitir agregar y eliminar publicaciones de una lista personal de favoritos y consultar dicha lista posteriormente. | Usuario |
-| RF-06 | **Iniciar solicitud de compra.** El sistema deberá permitir iniciar una solicitud de compra sobre una publicación disponible y seleccionar una modalidad de entrega definida por el vendedor. | Usuario |
-| RF-07 | **Consultar y gestionar operaciones.** El sistema deberá permitir al comprador y al vendedor consultar sus operaciones y visualizar su estado: pendiente, confirmada, completada o cancelada. | Usuario |
-| RF-08 | **Calificar una operación completada.** El sistema deberá permitir registrar una calificación y una reseña únicamente cuando exista una operación completada entre comprador y vendedor. | Usuario |
-| RF-09 | **Reportar publicación.** El sistema deberá permitir reportar una publicación mediante un motivo predefinido y un comentario opcional. | Usuario |
-| RF-10 | **Moderar publicaciones y reportes.** El sistema deberá permitir al administrador consultar reportes, revisar la publicación asociada, mantenerla visible u ocultarla y registrar la acción de moderación realizada. | Administrador |
+| :--- | :--- |
+| RF-01 | **Explorar y filtrar el catálogo.** La aplicación deberá permitir visualizar las publicaciones disponibles y buscar o filtrar videojuegos según título, consola, género, rango de precio, estado de conservación y ubicación. | Usuario |
+| RF-02 | **Consultar el detalle de una publicación.** La aplicación deberá mostrar la información completa de una publicación, incluyendo fotografías, título, consola, género, precio, estado de conservación, descripción, ubicación, modalidad de entrega y datos públicos del vendedor. | Usuario |
+| RF-03 | **Publicar un videojuego.** El usuario deberá poder crear una publicación de un videojuego físico, incorporando los datos obligatorios definidos por la plataforma y fotografías del producto. | Usuario |
+| RF-04 | **Gestionar publicaciones propias.** El usuario deberá poder editar, pausar, reactivar o eliminar sus publicaciones, siempre que el estado de la operación asociada permita realizar dicha acción. | Usuario |
+| RF-05 | **Gestionar favoritos.** El usuario deberá poder agregar o eliminar publicaciones de una lista personal de favoritos y consultarlas posteriormente. | Usuario |
+| RF-06 | **Iniciar una solicitud de compra.** El usuario deberá poder iniciar una solicitud de compra sobre una publicación disponible y seleccionar una de las modalidades de entrega definidas por el vendedor. | Usuario |
+| RF-07 | **Consultar y gestionar operaciones.** El comprador y el vendedor deberán poder consultar las operaciones en las que participan y visualizar su estado, por ejemplo: pendiente, confirmada, completada o cancelada. | Usuario |
+| RF-08 | **Calificar una operación completada.** El usuario deberá poder registrar una calificación y una reseña únicamente cuando exista una operación completada entre comprador y vendedor. | Usuario |
+| RF-09 | **Reportar una publicación.** El usuario deberá poder reportar una publicación seleccionando un motivo predefinido y, de forma opcional, agregando un comentario que entregue mayor contexto. | Usuario |
+| RF-10 | **Moderar publicaciones y reportes.** El administrador deberá poder revisar los reportes recibidos, consultar la publicación asociada, mantenerla visible u ocultarla y registrar la decisión de moderación realizada. | Administrador |
 
 ## Funcionalidades Transversales
 
 | ID | Funcionalidad | Descripción |
-| :--- | :--- | :--- |
-| FT-01 | Registro de usuarios | Crear una cuenta con los datos mínimos definidos. |
-| FT-02 | Inicio de sesión | Ingresar mediante credenciales válidas. |
-| FT-03 | Cierre de sesión | Finalizar una sesión activa. |
-| FT-04 | Restricción por rol | Limitar funcionalidades según Usuario o Administrador. |
+| :--- | :--- |
+| FT-01 | Registro de usuarios | Permitir la creación de una cuenta utilizando únicamente los datos necesarios definidos por la plataforma. |
+| FT-02 | Inicio de sesión | Permitir el acceso a la plataforma mediante credenciales válidas asociadas a una cuenta registrada. |
+| FT-03 | Cierre de sesión | Permitir al usuario finalizar de forma segura una sesión activa. |
+| FT-04 | Restricción por rol | Controlar el acceso a funcionalidades y rutas de acuerdo con el rol asignado al usuario: Usuario o Administrador. |
 
 ## Requerimientos No Funcionales
-
+| :--- | :--- |
 ### UX y Usabilidad
-
 #### RNF-UX-01 — Diseño adaptable
-
-La interfaz deberá adaptarse a dispositivos móviles y de escritorio sin pérdida de funcionalidades
-esenciales ni información crítica.
+La interfaz deberá adaptarse correctamente a dispositivos móviles y de escritorio, manteniendo accesibles las funcionalidades principales y evitando la pérdida de información relevante.
 
 #### RNF-UX-02 — Navegación consistente
-
-La aplicación deberá mantener nombres, ubicación y comportamiento coherentes para los controles
-principales entre sus distintas vistas.
+La aplicación deberá mantener una estructura de navegación coherente entre sus distintas vistas, utilizando nombres, ubicaciones y comportamientos consistentes para los controles principales.
 
 #### RNF-UX-03 — Retroalimentación al usuario
-
-Las acciones relevantes deberán mostrar estados de carga, confirmación o mensajes de error
-comprensibles.
+Las acciones relevantes deberán entregar una respuesta visual clara, mediante indicadores de carga, mensajes de confirmación o avisos de error comprensibles para el usuario.
 
 ### Accesibilidad
-
 #### RNF-ACC-01 — Accesibilidad de la interfaz
-
-Los formularios y controles deberán utilizar etiquetas comprensibles, jerarquía visual clara,
-contraste adecuado y navegación mediante teclado cuando corresponda.
+Los formularios, controles y elementos de navegación deberán utilizar etiquetas comprensibles, una jerarquía visual clara, contraste adecuado y permitir navegación mediante teclado cuando corresponda.
 
 ### Seguridad
+#### RNF-SEG-01 — Acceso a funciones protegidas
+Las funcionalidades relacionadas con publicaciones, favoritos, operaciones, calificaciones, reportes y administración deberán estar disponibles únicamente para usuarios con una sesión válida.
 
-#### RNF-SEG-01 — Autenticación de funciones protegidas
-
-Las funciones de publicación, favoritos, operaciones, calificación, reportes y administración
-deberán requerir una sesión válida.
-
-#### RNF-SEG-02 — Autorización por roles
-
-El sistema deberá verificar el rol del usuario antes de permitir el acceso a funciones
-administrativas.
+#### RNF-SEG-02 — Autorización según rol
+El sistema deberá verificar el rol del usuario antes de permitir el acceso a funcionalidades y rutas restringidas, diferenciando los permisos de Usuario y Administrador.
 
 #### RNF-SEG-03 — Privacidad y minimización de datos
+El sistema deberá solicitar únicamente la información personal necesaria para crear y utilizar una cuenta, evitando recopilar o mostrar datos que no sean requeridos para el funcionamiento de la plataforma.
 
-El registro inicial deberá solicitar únicamente los datos necesarios para crear y utilizar la
-cuenta, evitando exponer información privada innecesaria.
-
-#### RNF-SEG-04 — Protección de secretos
-
-Credenciales, claves de API y secretos no deberán publicarse en el repositorio ni escribirse
-directamente en el código fuente.
+#### RNF-SEG-04 — Protección de credenciales y secretos
+Las credenciales, claves de API y demás información sensible no deberán almacenarse directamente en el código fuente ni publicarse en el repositorio del proyecto.
 
 ### Rendimiento
+#### RNF-REN-01 — Rendimiento de la aplicación
+Las vistas principales, como catálogo, detalle de publicación y operaciones, deberán cargar de manera fluida y permitir la interacción del usuario sin bloqueos bajo condiciones normales de uso y prueba.
 
-#### RNF-REN-01 — Rendimiento de consultas
-
-Las vistas habituales de catálogo, detalle y operaciones deberán cargar de forma fluida, sin
-bloquear la interfaz, bajo las condiciones normales definidas para las pruebas del sistema.
-
-### Compatibilidad y mantenibilidad
-
+### Compatibilidad y Mantenibilidad
 #### RNF-COMP-01 — Compatibilidad
-
-La versión web deberá funcionar correctamente en navegadores modernos y conservar su funcionalidad
-en tamaños de pantalla móviles y de escritorio.
+La aplicación web deberá funcionar correctamente en navegadores modernos y mantener sus funcionalidades principales en distintos tamaños de pantalla, tanto en dispositivos móviles como de escritorio.
 
 #### RNF-MAN-01 — Estructura modular
-
-El frontend deberá organizarse modularmente en `pages`, `components`, `routes`, `services`, `models`
-y `data`, evitando duplicación innecesaria.
+El frontend deberá organizarse mediante una estructura modular en carpetas como `pages`, `components`, `routes`, `services`, `models` y `data`, favoreciendo la reutilización de código y evitando duplicaciones innecesarias.
 
 ## Arquitectura de Navegación
-
+| :--- | :--- |
 ### 1. Rutas principales y secundarias
-
 #### Rutas públicas
 
 | Ruta | Vista | Descripción |
@@ -337,7 +247,6 @@ y `data`, evitando duplicación innecesaria.
 | `/registro` | Registro | Permite crear una cuenta. |
 
 > Implementadas en EP1: todas.
-
 #### Rutas protegidas del Usuario
 
 | Ruta | Vista | Descripción |
@@ -351,7 +260,6 @@ y `data`, evitando duplicación innecesaria.
 | `/perfil` | Perfil | Muestra información pública y reputación del usuario. |
 
 > Implementadas en EP1: `/publicar` y `/operaciones`.
-
 #### Rutas protegidas del Administrador
 
 | Ruta | Vista | Descripción |
@@ -389,7 +297,6 @@ Aplicación
 ```
 
 ## Diferenciación de acceso según roles
-
 ### Matriz de acceso por rol
 
 | Funcionalidad | Visitante | Usuario | Administrador |
@@ -405,24 +312,24 @@ Aplicación
 | Gestionar usuarios | — | — | Sí |
 
 ### Acceso del Visitante
-
+| :--- | :--- |
 Puede explorar el catálogo, aplicar filtros y abrir el detalle de cualquier publicación disponible.
 Al intentar una acción protegida —comprar, publicar o revisar operaciones— la aplicación lo dirige
 al inicio de sesión y lo devuelve a la pantalla solicitada una vez autenticado.
 
 ### Acceso del Usuario
-
+| :--- | :--- |
 Dispone de todas las funciones de compra y venta con una misma cuenta: publicar y administrar sus
 publicaciones, guardar favoritos, iniciar operaciones, calificar operaciones completadas y reportar
 publicaciones. No accede a las rutas administrativas.
 
 ### Acceso del Administrador
-
+| :--- | :--- |
 Accede al panel de moderación, a los reportes, a la moderación de publicaciones y a la vista
 administrativa de usuarios. Las acciones sensibles requieren confirmación y quedan registradas.
 
 ### Control de acceso a rutas
-
+| :--- | :--- |
 El control está implementado en `src/routes/`:
 
 - `AppRoutes.tsx` declara cada ruta dentro del `IonRouterOutlet`; las protegidas envuelven su página
@@ -447,9 +354,8 @@ El control está implementado en `src/routes/`:
   aviso de permisos insuficientes.
 
 ## Flujos de Tareas
-
 ### Task Flow 1: Buscar e iniciar una compra
-
+| :--- | :--- |
 ```
 Inicio / Catálogo
       ↓
@@ -473,7 +379,7 @@ Operación creada → Mis operaciones → Completar → Calificar
 ```
 
 ### Task Flow 2: Publicar un videojuego
-
+| :--- | :--- |
 ```
 Login → Publicar → Ingresar datos → Agregar fotografías → Revisar
                          ↓
@@ -483,7 +389,7 @@ Login → Publicar → Ingresar datos → Agregar fotografías → Revisar
 ```
 
 ### Task Flow 3: Moderar un reporte
-
+| :--- | :--- |
 ```
 Login administrador → Panel → Reportes → Seleccionar reporte
       ↓
@@ -491,55 +397,50 @@ Revisar publicación → Mantener visible / Ocultar → Confirmar → Registrar 
 ```
 
 ### Puntos críticos de interacción
+| :--- | :--- |
+1. **Inicio de sesión y acceso por rol:** la aplicación deberá informar de manera clara los errores de autenticación y restringir el acceso a rutas o funcionalidades que no correspondan al rol del usuario.
 
-1. **Inicio de sesión y acceso por rol:** mensajes claros y bloqueo de rutas no autorizadas.
-2. **Formulario de publicación:** validación de campos obligatorios, conservación de los datos ya
-   escritos y confirmación antes de publicar.
-3. **Disponibilidad:** una publicación vendida o pausada no debe permitir una nueva operación.
-4. **Confirmación de compra:** mostrar el resumen del producto y la modalidad de entrega antes de
-   crear la operación.
-5. **Calificación:** habilitarla solo para operaciones completadas.
-6. **Moderación:** solicitar confirmación y registrar las acciones sensibles.
-7. **Cambio entre web y móvil:** mantener etiquetas, funciones y lógica aunque cambie la
-   distribución visual.
+2. **Formulario de publicación:** se deberán validar los campos obligatorios, evitar la pérdida accidental de la información ingresada y solicitar confirmación antes de crear una publicación.
 
-### Justificación Técnica
+3. **Disponibilidad de las publicaciones:** una publicación marcada como vendida o pausada no deberá permitir el inicio de una nueva operación de compra.
 
-En móvil se utiliza una barra inferior mediante `IonTabs`; en web, un `IonMenu` lateral fijo dentro
-de un `IonSplitPane`. Las mismas funciones mantienen nombres y comportamientos coherentes, mientras
-la grilla, los filtros y los formularios se reorganizan según el ancho disponible.
+4. **Confirmación de compra:** antes de generar una operación, el sistema deberá presentar un resumen del videojuego, su precio y la modalidad de entrega seleccionada.
+
+5. **Calificación de operaciones:** la opción de calificar deberá estar disponible únicamente cuando la operación haya sido registrada como completada.
+
+6. **Moderación de contenido:** las acciones sensibles, como ocultar una publicación, deberán solicitar confirmación y dejar registro de la decisión realizada.
+
+7. **Consistencia entre web y móvil:** la distribución visual podrá adaptarse según el dispositivo, pero las etiquetas, funcionalidades y lógica de interacción deberán mantenerse coherentes.
+
+### Justificación técnica
+| :--- | :--- |
+La arquitectura de navegación busca mantener una experiencia consistente entre las versiones móvil y web. En dispositivos móviles se propone utilizar una barra de navegación inferior mediante `IonTabs`, mientras que en la versión web se utilizará un menú lateral con `IonMenu` dentro de un `IonSplitPane`.
+
+Las funcionalidades conservarán los mismos nombres y comportamientos en ambas versiones, mientras que elementos como la grilla de publicaciones, los filtros y los formularios se reorganizarán según el espacio disponible en pantalla.
 
 ### Usabilidad
-
-La navegación es predecible: las secciones principales están siempre visibles en la barra inferior o
-en el menú lateral, con las mismas etiquetas en ambas versiones, y cada pantalla informa su estado
-mediante cargas, confirmaciones y mensajes de error comprensibles.
+| :--- | :--- |
+La navegación se plantea de forma simple y predecible, manteniendo las principales secciones visibles mediante la barra inferior en móvil y el menú lateral en web. Además, las acciones relevantes deberán entregar retroalimentación mediante indicadores de carga, mensajes de confirmación y avisos de error comprensibles.
 
 ### Eficiencia de interacción
-
-Los recorridos son breves. Desde el catálogo se llega al detalle en un toque y a la solicitud de
-compra en dos; los filtros se aplican sin salir de la vista de resultados y el formulario de
-publicación agrupa los campos en un solo paso con validación inmediata.
+| :--- | :--- |
+Los principales recorridos de la aplicación se diseñan para requerir pocos pasos. Desde el catálogo será posible acceder directamente al detalle de una publicación y, desde allí, iniciar una solicitud de compra. Los filtros podrán aplicarse sin abandonar la vista de resultados y el formulario de publicación concentrará la información necesaria en un flujo claro y guiado.
 
 ### Claridad estructural
-
-La separación entre rutas públicas, de Usuario y de Administrador hace explícito qué requiere sesión
-y qué requiere un rol específico, tanto en la navegación como en el código.
+| :--- | :--- |
+La separación entre rutas públicas, rutas protegidas para el rol Usuario y rutas exclusivas para el Administrador permite identificar claramente qué funcionalidades requieren autenticación y cuáles necesitan permisos específicos. Esta diferenciación se reflejará tanto en la navegación como en la organización del código.
 
 ### Escalabilidad
-
-La estructura modular y el acceso a datos aislado en `services/` permiten incorporar la API REST de
-EP2 sin reorganizar el frontend: solo cambia la implementación de esos servicios.
+| :--- | :--- |
+La organización modular del frontend y la separación del acceso a datos mediante la carpeta `services/` permitirán incorporar posteriormente la API REST correspondiente a EP2 sin modificar la estructura principal de las vistas y rutas. De esta forma, la lógica de acceso a datos podrá evolucionar sin afectar significativamente la interfaz.
 
 ## Bocetos UI/UX
-
-Prototipo construido manualmente por el equipo en Figma, sin utilizar asistentes de IA generativa
-para crear automáticamente pantallas, componentes, estilos, navegación o prototipo.
+| :--- | :--- |
+El prototipo UI/UX será construido manualmente por los integrantes del equipo utilizando Figma. Para su elaboración no se utilizarán asistentes de inteligencia artificial generativa destinados a crear automáticamente pantallas, componentes, estilos, estructuras de navegación o interacciones del prototipo.
 
 **Enlace público de Figma:** *[AGREGAR CUANDO ESTÉ DISPONIBLE]*
 
-Se planifican siete pantallas asociadas a funcionalidades, además de Inicio de sesión y Registro,
-todas en versión móvil y web.
+Se planifican siete pantallas asociadas a funcionalidades, además de Inicio de sesión y Registro, todas en versión móvil y web.
 
 | N° | Pantalla | RF / función | Contenido |
 | :--- | :--- | :--- | :--- |

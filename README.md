@@ -10,7 +10,7 @@
 |Tipo |Link |
 | :--- | :--- |
 | Repositorio | *https://github.com/cristobalpinto2600-cyber/Web-Proyecto* |
-| Prototipo en Figma | *(https://www.figma.com/design/HjfX9dFW7dpfEzYFaPNR0Z/Figma-Web?node-id=0-1&t=1ShxU2N3ZS4MXlIQ-1)* |
+| Prototipo en Figma | *https://www.figma.com/design/HjfX9dFW7dpfEzYFaPNR0Z/Figma-Web?node-id=0-1&t=1ShxU2N3ZS4MXlIQ-1* |
 
 ## Índice
 

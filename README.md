@@ -8,7 +8,6 @@
 - *Marco Antonio Fernandoy Rojas*
 
 |Tipo |Link |
-| :--- | :--- |
 | Repositorio | *https://github.com/cristobalpinto2600-cyber/Web-Proyecto* |
 | Prototipo en Figma | *agregar* |
 
@@ -28,7 +27,6 @@
 6. [Frontend con Ionic-React](#frontend-con-ionic-react)
 
 ## Justificación del problema
-| :--- | :--- |
 El comercio electrónico constituye un canal relevante en Chile. La Cámara de Comercio de Santiago
 informó que durante 2025 las ventas online bordearon los US$ 10 mil millones y crecieron 11,6 %
 nominal [1]. En este contexto, los videojuegos físicos usados pueden encontrarse en plataformas
@@ -55,7 +53,6 @@ información, facilite la comparación de publicaciones y entregue mayor trazabi
 venta de videojuegos físicos usados.
 
 **Consecuencias asociadas al problema:**
-| :--- | :--- |
 - Mayor tiempo de búsqueda al revisar publicaciones poco pertinentes.
 - Dificultad para comparar alternativas cuando cada vendedor describe el producto de forma distinta.
 - Mayor incertidumbre respecto del estado del juego y de la confiabilidad del vendedor.
@@ -63,13 +60,11 @@ venta de videojuegos físicos usados.
 - Menor trazabilidad cuando publicación, acuerdo y seguimiento de la operación quedan dispersos.
 
 ## Usuarios objetivo (Quién usará la aplicación)
-| :--- | :--- |
 El grupo objetivo son personas usuarias de consolas con formato físico interesadas en comprar o
 vender videojuegos de segunda mano. Una misma cuenta permite ambas acciones, por lo que los perfiles
 descritos a continuación representan momentos de uso y no cuentas distintas.
 
 | Aspecto | Caracterización preliminar |
-| :--- | :--- |
 | Grupo objetivo | Personas usuarias de consolas con formato físico interesadas en comprar o vender videojuegos de segunda mano. |
 | Características generales | Usuarios con distintos niveles de experiencia en aplicaciones de compraventa; pueden comparar precios, publicar productos y revisar información desde móvil o computador. |
 | Necesidades | Buscar títulos concretos, comparar precio/estado, publicar con rapidez, conocer modalidades de entrega y disponer de señales de confianza. |
@@ -81,45 +76,37 @@ descritos a continuación representan momentos de uso y no cuentas distintas.
 | Seguridad y privacidad | Solicitar pocos datos personales, proteger las funciones según sesión/rol y evitar exponer información privada innecesaria. |
 
 Personas compradoras
-| :--- | :--- |
 Corresponde a jugadores y jugadoras que buscan videojuegos específicos para su consola y que suelen comparar distintas publicaciones antes de tomar una decisión de compra. Acceden principalmente desde dispositivos móviles, generalmente en sesiones breves, por lo que necesitan identificar con rapidez aspectos relevantes como el precio, el estado de conservación, la ubicación y la modalidad de entrega.
 
 Necesidades principales
-| :--- | :--- |
 Encontrar videojuegos compatibles con su consola mediante herramientas de búsqueda y filtros.
 Comparar publicaciones considerando criterios equivalentes, como precio, estado de conservación y modalidad de entrega.
 Revisar fotografías e información sobre la reputación de la persona vendedora antes de iniciar una compra.
 Guardar publicaciones de interés y realizar seguimiento al estado de las operaciones iniciadas.
 
 Personas vendedoras
-| :--- | :--- |
 Corresponde a personas que poseen videojuegos físicos que ya no utilizan y que desean venderlos de manera ocasional. Generalmente utilizan el teléfono móvil para fotografiar y publicar sus productos, aunque pueden preferir el computador cuando necesitan administrar varias publicaciones al mismo tiempo.
 
 Necesidades principales
-| :--- | :--- |
 Publicar videojuegos mediante un proceso simple y guiado, con campos que ayuden a completar la información necesaria.
 Describir de manera clara el estado del producto, reduciendo dudas y consultas repetidas por parte de posibles compradores.
 Administrar sus publicaciones mediante acciones como editar, pausar, reactivar o eliminar.
 Recibir solicitudes de compra y realizar seguimiento a cada operación hasta su finalización.
 
 Administración de la plataforma
-| :--- | :--- |
 Corresponde a las personas responsables de revisar reportes, moderar publicaciones y supervisar el cumplimiento de las reglas definidas para la plataforma. Su uso se concentra principalmente en computadores de escritorio o portátiles, ya que requieren visualizar suficiente información antes de tomar una decisión de moderación.
 
 Necesidades principales
-| :--- | :--- |
 Revisar los reportes recibidos junto con la información y el contexto de la publicación asociada.
 Mantener visible u ocultar una publicación mediante acciones claras y confirmadas.
 Registrar las decisiones tomadas durante la moderación para conservar la trazabilidad de las acciones realizadas.
 
 ## Roles del Sistema
 | Rol | Descripción |
-| :--- | :--- |
 | Usuario | Puede comprar y vender con una misma cuenta: explorar, publicar, administrar publicaciones, guardar favoritos, iniciar operaciones, calificar y reportar. |
 | Administrador | Revisa reportes y modera publicaciones y usuarios según las reglas de la plataforma. |
 
 ### Definición de conceptos
-
 **Rol:** conjunto de permisos y funcionalidades que el sistema asigna a un tipo de usuario. Determina a qué vistas o rutas puede acceder y qué acciones puede realizar dentro de la plataforma.
 
 **Proto-persona:** perfil hipotético elaborado a partir de fuentes secundarias, análisis de soluciones existentes y supuestos razonados. Se utiliza para representar características, necesidades y contextos de uso probables cuando aún no se dispone de investigación directa con usuarios reales.
@@ -127,11 +114,9 @@ Registrar las decisiones tomadas durante la moderación para conservar la trazab
 > *Nota metodológica:* los siguientes perfiles son hipotéticos y corresponden a una caracterización preliminar. No representan entrevistas ni resultados obtenidos directamente de usuarios reales.
 
 ### Proto-personas
-
 Se definen tres proto-personas que representan los principales contextos de uso de la aplicación: compra, venta y administración.
 
 ### Proto-persona 1: Sebastián — comprador frecuente
-
 **Características generales:** estudiante universitario de 23 años, jugador frecuente y usuario habitual de aplicaciones móviles y plataformas de compraventa.
 
 **Necesidades y objetivos:** encontrar videojuegos compatibles con su consola, comparar publicaciones según precio, estado, fotografías y reputación del vendedor, guardar opciones de interés e iniciar una compra cuando encuentre una alternativa adecuada.
@@ -141,7 +126,6 @@ Se definen tres proto-personas que representan los principales contextos de uso 
 **Dispositivo y contexto de acceso:** principalmente smartphone, utilizado para realizar consultas rápidas, revisar publicaciones y comparar alternativas antes de una compra.
 
 ### Proto-persona 2: Camila — vendedora ocasional
-
 **Características generales:** jugadora ocasional de 29 años que conserva videojuegos físicos que ya no utiliza y que desea venderlos de manera sencilla.
 
 **Necesidades y objetivos:** publicar juegos mediante un proceso simple, describir claramente su estado, administrar varias publicaciones y realizar seguimiento a cada operación hasta completarla.
@@ -151,7 +135,6 @@ Se definen tres proto-personas que representan los principales contextos de uso 
 **Dispositivo y contexto de acceso:** utiliza el teléfono móvil para fotografiar y publicar videojuegos, y el computador cuando necesita administrar varias publicaciones.
 
 ### Proto-persona 3: Daniel — administrador
-
 **Características generales:** persona adulta con experiencia básica a intermedia en el uso de herramientas administrativas y plataformas web.
 
 **Necesidades y objetivos:** revisar reportes con suficiente contexto, evaluar publicaciones, tomar decisiones de moderación y mantener un registro de las acciones realizadas.
@@ -161,40 +144,44 @@ Se definen tres proto-personas que representan los principales contextos de uso 
 **Dispositivo y contexto de acceso:** principalmente computador de escritorio o portátil, ya que las tareas administrativas requieren revisar mayor cantidad de información.
 
 ## Requerimientos
-
 Los requerimientos funcionales no contabilizan el registro ni el inicio de sesión, ya que esas
 funciones se documentan como funcionalidades transversales.
 
 ## Requerimientos
-
 Los requerimientos definidos a continuación describen las principales funcionalidades que deberá ofrecer la plataforma. De acuerdo con la pauta del proyecto, el registro y el inicio de sesión no se contabilizan como requerimientos funcionales principales, ya que se consideran funcionalidades transversales necesarias para el acceso y control de usuarios.
 
 ## Requerimientos funcionales por rol
 
 | ID | Requerimiento funcional | Rol |
-| :--- | :--- |
+
 | RF-01 | **Explorar y filtrar el catálogo.** La aplicación deberá permitir visualizar las publicaciones disponibles y buscar o filtrar videojuegos según título, consola, género, rango de precio, estado de conservación y ubicación. | Usuario |
+
 | RF-02 | **Consultar el detalle de una publicación.** La aplicación deberá mostrar la información completa de una publicación, incluyendo fotografías, título, consola, género, precio, estado de conservación, descripción, ubicación, modalidad de entrega y datos públicos del vendedor. | Usuario |
+
 | RF-03 | **Publicar un videojuego.** El usuario deberá poder crear una publicación de un videojuego físico, incorporando los datos obligatorios definidos por la plataforma y fotografías del producto. | Usuario |
+
 | RF-04 | **Gestionar publicaciones propias.** El usuario deberá poder editar, pausar, reactivar o eliminar sus publicaciones, siempre que el estado de la operación asociada permita realizar dicha acción. | Usuario |
+
 | RF-05 | **Gestionar favoritos.** El usuario deberá poder agregar o eliminar publicaciones de una lista personal de favoritos y consultarlas posteriormente. | Usuario |
+
 | RF-06 | **Iniciar una solicitud de compra.** El usuario deberá poder iniciar una solicitud de compra sobre una publicación disponible y seleccionar una de las modalidades de entrega definidas por el vendedor. | Usuario |
+
 | RF-07 | **Consultar y gestionar operaciones.** El comprador y el vendedor deberán poder consultar las operaciones en las que participan y visualizar su estado, por ejemplo: pendiente, confirmada, completada o cancelada. | Usuario |
+
 | RF-08 | **Calificar una operación completada.** El usuario deberá poder registrar una calificación y una reseña únicamente cuando exista una operación completada entre comprador y vendedor. | Usuario |
+
 | RF-09 | **Reportar una publicación.** El usuario deberá poder reportar una publicación seleccionando un motivo predefinido y, de forma opcional, agregando un comentario que entregue mayor contexto. | Usuario |
+
 | RF-10 | **Moderar publicaciones y reportes.** El administrador deberá poder revisar los reportes recibidos, consultar la publicación asociada, mantenerla visible u ocultarla y registrar la decisión de moderación realizada. | Administrador |
 
 ## Funcionalidades Transversales
-
 | ID | Funcionalidad | Descripción |
-| :--- | :--- |
 | FT-01 | Registro de usuarios | Permitir la creación de una cuenta utilizando únicamente los datos necesarios definidos por la plataforma. |
 | FT-02 | Inicio de sesión | Permitir el acceso a la plataforma mediante credenciales válidas asociadas a una cuenta registrada. |
 | FT-03 | Cierre de sesión | Permitir al usuario finalizar de forma segura una sesión activa. |
 | FT-04 | Restricción por rol | Controlar el acceso a funcionalidades y rutas de acuerdo con el rol asignado al usuario: Usuario o Administrador. |
 
 ## Requerimientos No Funcionales
-| :--- | :--- |
 ### UX y Usabilidad
 #### RNF-UX-01 — Diseño adaptable
 La interfaz deberá adaptarse correctamente a dispositivos móviles y de escritorio, manteniendo accesibles las funcionalidades principales y evitando la pérdida de información relevante.
@@ -234,7 +221,6 @@ La aplicación web deberá funcionar correctamente en navegadores modernos y man
 El frontend deberá organizarse mediante una estructura modular en carpetas como `pages`, `components`, `routes`, `services`, `models` y `data`, favoreciendo la reutilización de código y evitando duplicaciones innecesarias.
 
 ## Arquitectura de Navegación
-| :--- | :--- |
 ### 1. Rutas principales y secundarias
 #### Rutas públicas
 
@@ -300,7 +286,6 @@ Aplicación
 ### Matriz de acceso por rol
 
 | Funcionalidad | Visitante | Usuario | Administrador |
-| :--- | :---: | :---: | :---: |
 | Explorar catálogo y ver detalle | Sí | Sí | Sí |
 | Registrar / iniciar sesión | Sí | — | — |
 | Publicar y gestionar publicaciones propias | — | Sí | — |
@@ -312,24 +297,20 @@ Aplicación
 | Gestionar usuarios | — | — | Sí |
 
 ### Acceso del Visitante
-| :--- | :--- |
 Puede explorar el catálogo, aplicar filtros y abrir el detalle de cualquier publicación disponible.
 Al intentar una acción protegida —comprar, publicar o revisar operaciones— la aplicación lo dirige
 al inicio de sesión y lo devuelve a la pantalla solicitada una vez autenticado.
 
 ### Acceso del Usuario
-| :--- | :--- |
 Dispone de todas las funciones de compra y venta con una misma cuenta: publicar y administrar sus
 publicaciones, guardar favoritos, iniciar operaciones, calificar operaciones completadas y reportar
 publicaciones. No accede a las rutas administrativas.
 
 ### Acceso del Administrador
-| :--- | :--- |
 Accede al panel de moderación, a los reportes, a la moderación de publicaciones y a la vista
 administrativa de usuarios. Las acciones sensibles requieren confirmación y quedan registradas.
 
 ### Control de acceso a rutas
-| :--- | :--- |
 El control está implementado en `src/routes/`:
 
 - `AppRoutes.tsx` declara cada ruta dentro del `IonRouterOutlet`; las protegidas envuelven su página
@@ -355,7 +336,6 @@ El control está implementado en `src/routes/`:
 
 ## Flujos de Tareas
 ### Task Flow 1: Buscar e iniciar una compra
-| :--- | :--- |
 ```
 Inicio / Catálogo
       ↓
@@ -379,7 +359,6 @@ Operación creada → Mis operaciones → Completar → Calificar
 ```
 
 ### Task Flow 2: Publicar un videojuego
-| :--- | :--- |
 ```
 Login → Publicar → Ingresar datos → Agregar fotografías → Revisar
                          ↓
@@ -389,7 +368,6 @@ Login → Publicar → Ingresar datos → Agregar fotografías → Revisar
 ```
 
 ### Task Flow 3: Moderar un reporte
-| :--- | :--- |
 ```
 Login administrador → Panel → Reportes → Seleccionar reporte
       ↓
@@ -397,7 +375,6 @@ Revisar publicación → Mantener visible / Ocultar → Confirmar → Registrar 
 ```
 
 ### Puntos críticos de interacción
-| :--- | :--- |
 1. **Inicio de sesión y acceso por rol:** la aplicación deberá informar de manera clara los errores de autenticación y restringir el acceso a rutas o funcionalidades que no correspondan al rol del usuario.
 
 2. **Formulario de publicación:** se deberán validar los campos obligatorios, evitar la pérdida accidental de la información ingresada y solicitar confirmación antes de crear una publicación.
@@ -413,29 +390,23 @@ Revisar publicación → Mantener visible / Ocultar → Confirmar → Registrar 
 7. **Consistencia entre web y móvil:** la distribución visual podrá adaptarse según el dispositivo, pero las etiquetas, funcionalidades y lógica de interacción deberán mantenerse coherentes.
 
 ### Justificación técnica
-| :--- | :--- |
 La arquitectura de navegación busca mantener una experiencia consistente entre las versiones móvil y web. En dispositivos móviles se propone utilizar una barra de navegación inferior mediante `IonTabs`, mientras que en la versión web se utilizará un menú lateral con `IonMenu` dentro de un `IonSplitPane`.
 
 Las funcionalidades conservarán los mismos nombres y comportamientos en ambas versiones, mientras que elementos como la grilla de publicaciones, los filtros y los formularios se reorganizarán según el espacio disponible en pantalla.
 
 ### Usabilidad
-| :--- | :--- |
 La navegación se plantea de forma simple y predecible, manteniendo las principales secciones visibles mediante la barra inferior en móvil y el menú lateral en web. Además, las acciones relevantes deberán entregar retroalimentación mediante indicadores de carga, mensajes de confirmación y avisos de error comprensibles.
 
 ### Eficiencia de interacción
-| :--- | :--- |
 Los principales recorridos de la aplicación se diseñan para requerir pocos pasos. Desde el catálogo será posible acceder directamente al detalle de una publicación y, desde allí, iniciar una solicitud de compra. Los filtros podrán aplicarse sin abandonar la vista de resultados y el formulario de publicación concentrará la información necesaria en un flujo claro y guiado.
 
 ### Claridad estructural
-| :--- | :--- |
 La separación entre rutas públicas, rutas protegidas para el rol Usuario y rutas exclusivas para el Administrador permite identificar claramente qué funcionalidades requieren autenticación y cuáles necesitan permisos específicos. Esta diferenciación se reflejará tanto en la navegación como en la organización del código.
 
 ### Escalabilidad
-| :--- | :--- |
 La organización modular del frontend y la separación del acceso a datos mediante la carpeta `services/` permitirán incorporar posteriormente la API REST correspondiente a EP2 sin modificar la estructura principal de las vistas y rutas. De esta forma, la lógica de acceso a datos podrá evolucionar sin afectar significativamente la interfaz.
 
 ## Bocetos UI/UX
-| :--- | :--- |
 El prototipo UI/UX será construido manualmente por los integrantes del equipo utilizando Figma. Para su elaboración no se utilizarán asistentes de inteligencia artificial generativa destinados a crear automáticamente pantallas, componentes, estilos, estructuras de navegación o interacciones del prototipo.
 
 **Enlace público de Figma:** *[AGREGAR CUANDO ESTÉ DISPONIBLE]*
@@ -443,7 +414,6 @@ El prototipo UI/UX será construido manualmente por los integrantes del equipo u
 Se planifican siete pantallas asociadas a funcionalidades, además de Inicio de sesión y Registro, todas en versión móvil y web.
 
 | N° | Pantalla | RF / función | Contenido |
-| :--- | :--- | :--- | :--- |
 | 1 | Catálogo / inicio | RF-01 | Buscador, filtros, grilla o lista de juegos, precio, consola, estado y ubicación. |
 | 2 | Detalle del videojuego | RF-02 | Fotografías, datos del producto, vendedor, reputación, entrega, favorito y acción de compra. |
 | 3 | Publicar videojuego | RF-03 | Formulario con título, consola, género, estado, precio, descripción, ubicación, entrega e imágenes. |

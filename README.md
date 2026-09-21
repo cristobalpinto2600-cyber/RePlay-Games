@@ -409,7 +409,7 @@ La organización modular del frontend y la separación del acceso a datos median
 ## Bocetos UI/UX
 El prototipo UI/UX será construido manualmente por los integrantes del equipo utilizando Figma. Para su elaboración no se utilizarán asistentes de inteligencia artificial generativa destinados a crear automáticamente pantallas, componentes, estilos, estructuras de navegación o interacciones del prototipo.
 
-**Enlace público de Figma:** *[AGREGAR CUANDO ESTÉ DISPONIBLE]*
+**Enlace público de Figma:** *https://www.figma.com/design/HjfX9dFW7dpfEzYFaPNR0Z/Figma-Web?node-id=0-1&p=f&t=z6N2bHfQjHtF0jdA-0*
 
 Se planifican siete pantallas asociadas a funcionalidades, además de Inicio de sesión y Registro, todas en versión móvil y web.
 

@@ -82,9 +82,8 @@ descritos a continuación representan momentos de uso y no cuentas distintas.
 
 ### Personas compradoras
 
-Jugadores y jugadoras que buscan títulos concretos para su consola y que comparan varias
-publicaciones antes de decidir. Acceden principalmente desde el teléfono, en sesiones breves, y
-necesitan distinguir rápidamente qué publicación conviene según precio, estado y ubicación.
+Corresponde a jugadores y jugadoras que buscan videojuegos específicos para su consola y que suelen comparar distintas publicaciones antes de tomar una decisión de compra. Acceden principalmente desde dispositivos móviles, generalmente en sesiones breves, por lo que necesitan identificar con rapidez aspectos relevantes como el precio, el estado de conservación, la ubicación y la modalidad de entrega.
+
 
 #### Necesidades principales
 
@@ -108,9 +107,7 @@ al mismo tiempo.
 
 ### Administración de la plataforma
 
-Personas encargadas de revisar reportes y moderar contenido. Trabajan principalmente desde
-computador de escritorio y requieren contexto suficiente para decidir y dejar registro de sus
-acciones.
+Corresponde a las personas responsables de revisar reportes, moderar publicaciones y supervisar el cumplimiento de las reglas definidas para la plataforma. Su uso se concentra principalmente en computadores de escritorio o portátiles, ya que requieren visualizar suficiente información antes de tomar una decisión de moderación.
 
 #### Necesidades principales
 
@@ -536,7 +533,7 @@ EP2 sin reorganizar el frontend: solo cambia la implementación de esos servicio
 Prototipo construido manualmente por el equipo en Figma, sin utilizar asistentes de IA generativa
 para crear automáticamente pantallas, componentes, estilos, navegación o prototipo.
 
-**Enlace público de Figma:** *[AGREGAR CUANDO ESTÉ DISPONIBLE]*
+**Enlace público de Figma:** *https://www.figma.com/design/HjfX9dFW7dpfEzYFaPNR0Z/Figma-Web?node-id=0-1&t=1ShxU2N3ZS4MXlIQ-1*
 
 Se planifican siete pantallas asociadas a funcionalidades, además de Inicio de sesión y Registro,
 todas en versión móvil y web.

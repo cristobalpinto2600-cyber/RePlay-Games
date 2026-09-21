@@ -1,0 +1,47 @@
+/**
+ * Tema de RePlay Games.
+ * Se definen solo los colores de marca; el resto de los valores los aporta Ionic.
+ * Este archivo se importa después de la paleta oscura del sistema, por lo que los colores
+ * de marca se mantienen tanto en modo claro como en modo oscuro.
+ */
+
+:root {
+  /* Violeta de marca */
+  --ion-color-primary: #5b47f5;
+  --ion-color-primary-rgb: 91, 71, 245;
+  --ion-color-primary-contrast: #ffffff;
+  --ion-color-primary-contrast-rgb: 255, 255, 255;
+  --ion-color-primary-shade: #503ed8;
+  --ion-color-primary-tint: #6f5df6;
+
+  /* Ámbar de apoyo, usado en estados y destacados */
+  --ion-color-secondary: #f59e0b;
+  --ion-color-secondary-rgb: 245, 158, 11;
+  --ion-color-secondary-contrast: #000000;
+  --ion-color-secondary-contrast-rgb: 0, 0, 0;
+  --ion-color-secondary-shade: #d88b0a;
+  --ion-color-secondary-tint: #f6aa28;
+
+  /* Variables propias de la aplicación */
+  --replay-ancho-maximo: 1180px;
+  --replay-radio: 16px;
+  --replay-sombra: 0 6px 18px rgba(15, 12, 45, 0.08);
+  --replay-superficie: #ffffff;
+  --replay-borde: rgba(15, 12, 45, 0.1);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    /* En fondo oscuro se aclara el violeta para conservar el contraste (RNF-ACC-01) */
+    --ion-color-primary: #8b7bff;
+    --ion-color-primary-rgb: 139, 123, 255;
+    --ion-color-primary-contrast: #101014;
+    --ion-color-primary-contrast-rgb: 16, 16, 20;
+    --ion-color-primary-shade: #7a6ce0;
+    --ion-color-primary-tint: #9788ff;
+
+    --replay-sombra: 0 6px 18px rgba(0, 0, 0, 0.35);
+    --replay-superficie: #1c1c22;
+    --replay-borde: rgba(255, 255, 255, 0.12);
+  }
+}

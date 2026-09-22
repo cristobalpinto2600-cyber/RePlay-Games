@@ -23,18 +23,22 @@ Las siguientes actividades fueron desarrolladas de manera conjunta por todos los
 
 ## Índice
 
-1. [Justificación del problema](#justificación-del-problema)
-2. [Usuarios](#usuarios-objetivo-quién-usará-la-aplicación)
+1. [Descripción general del sistema](#descripción-general-del-sistema)
+2. [Objetivo del proyecto](#objetivo-del-proyecto)
+3. [Principales funcionalidades](#principales-funcionalidades)
+4. [Justificación del problema](#justificación-del-problema)
+5. [Usuarios](#usuarios-objetivo-quién-usará-la-aplicación)
     - [Roles](#roles-del-sistema)
     - [Proto-personas](#proto-personas)
-3. [Requerimientos](#requerimientos)
-4. [Arquitectura de la Información / UX](#arquitectura-de-navegación)
-    - [Diferenciación x roles](#diferenciación-de-acceso-según-roles)
+    - [Supuestos utilizados](#supuestos-utilizados)
+6. [Requerimientos](#requerimientos)
+7. [Arquitectura de la Información / UX](#arquitectura-de-navegación)
+    - [Diferenciación por roles](#diferenciación-de-acceso-según-roles)
     - [Flujos principales de tareas](#flujos-de-tareas)
     - [Puntos críticos de interacción](#puntos-críticos-de-interacción)
-    - [Justificación Técnica](#justificación-técnica)
-5. [Bocetos UX/UI](#bocetos-uiux)
-6. [Frontend con Ionic-React](#frontend-con-ionic-react)
+    - [Justificación técnica](#justificación-técnica)
+8. [Bocetos UI/UX](#bocetos-uiux)
+9. [Frontend con Ionic-React](#frontend-con-ionic-react)
 
 
 ## Descripción general del sistema
@@ -339,10 +343,9 @@ Credenciales, claves de API y secretos no deberán publicarse en el repositorio 
 directamente en el código fuente.
 
 ### Rendimiento
-
 #### RNF-REN-01 — Rendimiento de consultas
 
-Las vistas principales de catálogo, detalle y operaciones deberán mostrar su contenido principal sin bloquear la interacción del usuario y dentro de los tiempos establecidos durante las pruebas de rendimiento del sistema.
+Las vistas principales de catálogo, detalle y operaciones deberán mostrar su contenido principal en un tiempo máximo de 3 segundos bajo las condiciones normales definidas para las pruebas del sistema.
 
 ### Compatibilidad y mantenibilidad
 
@@ -364,11 +367,12 @@ y `data`, evitando duplicación innecesaria.
 
 | Ruta | Vista | Descripción |
 | :--- | :--- | :--- |
-| `/` | Inicio / catálogo | Permite explorar publicaciones disponibles y acceder a la búsqueda. |
-| `/catalogo` | Catálogo | Permite buscar y filtrar videojuegos. |
+| `/` | Redirección inicial | Redirige al catálogo principal de la aplicación. |
+| `/catalogo` | Catálogo | Permite explorar, buscar y filtrar las publicaciones disponibles. |
 | `/publicacion/:id` | Detalle de publicación | Muestra la información completa de una publicación. |
 | `/login` | Inicio de sesión | Permite ingresar con credenciales. |
 | `/registro` | Registro | Permite crear una cuenta. |
+
 
 > Implementadas en EP1: todas.
 
@@ -615,8 +619,7 @@ La contraseña deberá cumplir las condiciones de seguridad definidas para la ap
 ## Frontend con Ionic-React
 ### Estado de esta entrega
 
-EP1 es una entrega parcial. Se implementaron las seis pantallas recomendadas para esta etapa, con
-navegación real, rutas protegidas y diseño responsivo.
+EP1 corresponde a la etapa inicial del desarrollo. Para esta entrega se implementaron seis pantallas en Ionic + React, con navegación funcional, rutas protegidas y diseño adaptable a dispositivos móviles y de escritorio.
 
 Los datos son **estáticos (mock)**: no hay backend, base de datos ni pagos. Los formularios validan,
 confirman y muestran el flujo completo, pero no crean ni modifican registros. La única información
@@ -696,53 +699,52 @@ La pantalla de inicio de sesión incluye un botón que completa estos datos auto
 
 Catálogo de juegos
 
-![Catálogo](/capturas/Screenshot%202026-09-21%20211449.png)
+![Catálogo](capturas/Screenshot%202026-09-21%20211449.png)
 
 ------------------------------------------------------------
 
 Inicio de sesión
 
-![Inicio de sesión](/capturas/Screenshot%202026-09-21%20211809.png)
+![Inicio de sesión](capturas/Screenshot%202026-09-21%20211809.png)
 
 ------------------------------------------------------------
 
 Crear cuenta
 
-![Crear cuenta](/capturas/Screenshot%202026-09-21%20211816.png)
+![Crear cuenta](capturas/Screenshot%202026-09-21%20211816.png)
 
 ------------------------------------------------------------
 
 Detalle de juego
 
-![Detalle de juego](/capturas/Screenshot%202026-09-21%20211826.png)
+![Detalle de juego](capturas/Screenshot%202026-09-21%20211826.png)
 
 ------------------------------------------------------------
 
 Filtros
 
-![Filtros](/capturas/Screenshot%202026-09-21%20211835.png)
+![Filtros](capturas/Screenshot%202026-09-21%20211835.png)
 
 ------------------------------------------------------------
 
 Publicar videojuego
 
-![Publicar videojuego](/capturas/Screenshot%202026-09-21%20211940.png)
+![Publicar videojuego](capturas/Screenshot%202026-09-21%20211940.png)
 
 ------------------------------------------------------------
 
 Compras y ventas
 
-![Compras y ventas](/capturas/Screenshot%202026-09-21%20211953.png)
+![Compras y ventas](capturas/Screenshot%202026-09-21%20211953.png)
 
 ------------------------------------------------------------
 
 ### Pendiente para las próximas entregas
 
-- Pantallas de favoritos, mis publicaciones, edición, calificación, perfil y panel de administración
-  (RF-04, RF-05, RF-08, RF-09, RF-10).
-- Carga real de fotografías.
-- API REST, base de datos relacional y autenticación con JWT.
-- Capturas reales en el repositorio y enlace público al prototipo de Figma.
+- Implementación de las pantallas y funcionalidades aún no incorporadas al frontend, como favoritos, edición de publicaciones, calificación, perfil y funciones administrativas adicionales.
+- Carga y almacenamiento real de fotografías.
+- Implementación de la API REST y conexión con una base de datos relacional.
+- Implementación de autenticación mediante JWT y manejo de sesiones desde el backend.
 
 ## Librerías usadas con React (Ionic)
 

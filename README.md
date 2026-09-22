@@ -36,6 +36,19 @@ Las siguientes actividades fueron desarrolladas de manera conjunta por todos los
 5. [Bocetos UX/UI](#bocetos-uiux)
 6. [Frontend con Ionic-React](#frontend-con-ionic-react)
 
+
+## Descripción general del sistema
+
+RePlay Games es una aplicación web y móvil orientada a la compra y venta de videojuegos físicos de segunda mano. La plataforma busca centralizar publicaciones especializadas y facilitar la búsqueda, comparación y gestión de operaciones entre usuarios, incorporando además funciones de favoritos, calificaciones, reportes y moderación.
+
+## Objetivo del proyecto
+
+Desarrollar una aplicación web y móvil que facilite la compra y venta de videojuegos físicos de segunda mano mediante una plataforma especializada, clara y adaptable a distintos dispositivos, permitiendo organizar la información de las publicaciones y entregar mayor trazabilidad durante las operaciones.
+
+## Principales funcionalidades
+
+Entre las principales funcionalidades de RePlay Games se encuentran la exploración y filtrado del catálogo, consulta del detalle de publicaciones, publicación y administración de videojuegos, gestión de favoritos, operaciones de compra y venta, calificaciones asociadas a operaciones completadas, reportes de publicaciones y moderación administrativa.
+
 ## Justificación del problema
 
 El comercio electrónico constituye un canal relevante en Chile. La Cámara de Comercio de Santiago
@@ -329,8 +342,7 @@ directamente en el código fuente.
 
 #### RNF-REN-01 — Rendimiento de consultas
 
-Las vistas habituales de catálogo, detalle y operaciones deberán cargar de forma fluida, sin
-bloquear la interfaz, bajo las condiciones normales definidas para las pruebas del sistema.
+Las vistas principales de catálogo, detalle y operaciones deberán mostrar su contenido principal sin bloquear la interacción del usuario y dentro de los tiempos establecidos durante las pruebas de rendimiento del sistema.
 
 ### Compatibilidad y mantenibilidad
 
@@ -560,8 +572,7 @@ para crear automáticamente pantallas, componentes, estilos, navegación o proto
 
 **Enlace público de Figma:** *https://www.figma.com/design/HjfX9dFW7dpfEzYFaPNR0Z/Figma-Web?node-id=0-1&t=1ShxU2N3ZS4MXlIQ-1*
 
-Se planifican siete pantallas asociadas a funcionalidades, además de Inicio de sesión y Registro,
-todas en versión móvil y web.
+El prototipo incluye siete pantallas asociadas a las funcionalidades principales del sistema, además de las vistas de Inicio de sesión y Registro. Todas las interfaces fueron diseñadas en versiones móvil y web, manteniendo una navegación, jerarquía visual y distribución de contenidos coherentes entre ambos formatos.
 
 | N° | Pantalla | RF / función | Contenido |
 | :--- | :--- | :--- | :--- |
@@ -596,8 +607,12 @@ todas en versión móvil y web.
 No se solicita RUT, dirección exacta, teléfono ni fecha de nacimiento durante el registro inicial,
 porque no son necesarios para las funcionalidades definidas en EP1 (RNF-SEG-03).
 
-## Frontend con Ionic-React
+### Validaciones consideradas en el registro
+El formulario diferencia visualmente los campos obligatorios y opcionales e informa el formato esperado de los datos ingresados. También considera validaciones de entrada, mensajes de error comprensibles y retroalimentación al completar correctamente el registro.
+La contraseña deberá cumplir las condiciones de seguridad definidas para la aplicación y coincidir con el campo de confirmación antes de permitir la creación de la cuenta.
 
+
+## Frontend con Ionic-React
 ### Estado de esta entrega
 
 EP1 es una entrega parcial. Se implementaron las seis pantallas recomendadas para esta etapa, con

@@ -2,10 +2,19 @@
 
 # Presentado por:
 
-- *Francisco Javier Reyes Villalón*
-- *Tomás Ignacio Moraga Gálvez*
-- *Cristóbal Jesús Pinto Quiroga*
-- *Marco Antonio Fernandoy Rojas*
+- *Francisco Javier Reyes Villalón* (Documentación del proyecto y elaboración del README)
+- *Tomás Ignacio Moraga Gálvez* (Desarrollo del frontend en Ionic + React)
+- *Cristóbal Jesús Pinto Quiroga* (Diseño UI/UX y elaboración del prototipo en Figma)
+- *Marco Antonio Fernandoy Rojas* (Gestión del repositorio en GitHub, ramas y commits)
+
+Las siguientes actividades fueron desarrolladas de manera conjunta por todos los integrantes del equipo:
+- Definición de requerimientos funcionales y no funcionales.
+- Definición de roles y caracterización de usuarios.
+- Arquitectura de navegación y flujos de tareas.
+- Configuración de rutas públicas, protegidas y acceso por roles.
+- Pruebas de navegación y funcionamiento general.
+- Revisión final de la documentación y coherencia entre Figma, README y frontend.
+  
 
 |Tipo |Link |
 | :--- | :--- |
@@ -222,6 +231,22 @@ Panel administrativo, reportes, moderación de publicaciones y gestión de usuar
 #### Dispositivo y contexto probable de acceso
 
 Principalmente computador de escritorio o portátil.
+
+### Supuestos utilizados
+
+Para construir la caracterización de los usuarios y las proto-personas se consideraron supuestos razonados a partir del problema identificado, las fuentes secundarias consultadas y el análisis de plataformas de compraventa existentes.
+
+Los principales supuestos considerados son:
+
+- Las personas usuarias accederán principalmente desde dispositivos móviles para realizar consultas rápidas, aunque también podrán utilizar computadores para administrar publicaciones o revisar información con mayor detalle.
+- Una misma cuenta permitirá realizar acciones tanto de compra como de venta, por lo que comprador y vendedor representan contextos de uso y no roles independientes dentro del sistema.
+- El precio, la consola compatible, el estado de conservación, las fotografías, la ubicación y la modalidad de entrega serán aspectos relevantes al momento de comparar publicaciones.
+- Las personas compradoras valorarán disponer de información estructurada y señales de confianza antes de iniciar una operación.
+- Las personas vendedoras preferirán un proceso de publicación sencillo, guiado y que facilite la descripción del estado del videojuego.
+- Las calificaciones vinculadas a operaciones completadas pueden aportar información adicional sobre la experiencia previa entre usuarios.
+- Las tareas de moderación y revisión de reportes serán realizadas principalmente desde computadores, debido a que requieren visualizar mayor cantidad de información antes de tomar una decisión.
+
+> **Nota:** Estos supuestos corresponden a una caracterización preliminar elaborada mediante fuentes secundarias y análisis de soluciones existentes. No representan resultados obtenidos mediante entrevistas, encuestas u otras técnicas de investigación directa con usuarios reales.
 
 ## Requerimientos
 

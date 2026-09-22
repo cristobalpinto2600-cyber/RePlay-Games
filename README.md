@@ -679,7 +679,47 @@ La pantalla de inicio de sesión incluye un botón que completa estos datos auto
 
 ### Capturas de pantalla
 
-*[Agregar capturas reales en `docs/img/` y enlazarlas aquí cuando estén disponibles.]*
+Catálogo de juegos
+
+![Catálogo](/capturas/Screenshot%202026-09-21%20211449.png)
+
+------------------------------------------------------------
+
+Inicio de sesión
+
+![Inicio de sesión](/capturas/Screenshot%202026-09-21%20211809.png)
+
+------------------------------------------------------------
+
+Crear cuenta
+
+![Crear cuenta](/capturas/Screenshot%202026-09-21%20211816.png)
+
+------------------------------------------------------------
+
+Detalle de juego
+
+![Detalle de juego](/capturas/Screenshot%202026-09-21%20211826.png)
+
+------------------------------------------------------------
+
+Filtros
+
+![Filtros](/capturas/Screenshot%202026-09-21%20211835.png)
+
+------------------------------------------------------------
+
+Publicar videojuego
+
+![Publicar videojuego](/capturas/Screenshot%202026-09-21%20211940.png)
+
+------------------------------------------------------------
+
+Compras y ventas
+
+![Compras y ventas](/capturas/Screenshot%202026-09-21%20211953.png)
+
+------------------------------------------------------------
 
 ### Pendiente para las próximas entregas
 

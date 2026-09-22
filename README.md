@@ -676,6 +676,10 @@ npm install
 npm run dev
 ```
 
+
+
+
+
 La aplicación queda disponible en <http://localhost:5173>. Si el equipo tiene instalado el CLI de
 Ionic, también funciona `ionic serve`, ya que el proyecto incluye `ionic.config.json` con el tipo
 `react-vite`.

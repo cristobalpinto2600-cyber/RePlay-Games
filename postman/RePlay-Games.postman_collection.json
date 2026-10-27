@@ -1,0 +1,3078 @@
+{
+  "info": {
+    "name": "RePlay Games API (EP2)",
+    "description": "Pruebas de la API REST de RePlay Games: autenticación JWT, roles, catálogo, publicaciones, operaciones y administración. Ejecutar en orden (Run collection) con el environment \"RePlay Games - local\". Cada ejecución crea datos nuevos con correos únicos, por lo que se puede repetir.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "0. Salud del servidor",
+      "item": [
+        {
+          "name": "Estado de la API y de la base de datos",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Base de datos conectada', () => pm.expect(pm.response.json().baseDatos).to.eql('conectada'));",
+                  "pm.test('Responde en menos de 3 segundos (RNF-REN-01)', () => pm.expect(pm.response.responseTime).to.be.below(3000));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/salud",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "salud"
+              ]
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "1. Autenticación (FT-01, FT-02)",
+      "item": [
+        {
+          "name": "Registro exitoso",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const sello = Date.now();",
+                  "pm.environment.set('correoNuevo', `jugador${sello}@replay.cl`);",
+                  "pm.environment.set('nombreNuevo', `jugador_${sello}`);"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 201', () => pm.response.to.have.status(201));",
+                  "const datos = pm.response.json();",
+                  "pm.test('Crea la cuenta con rol usuario', () => pm.expect(datos.usuario.rol).to.eql('usuario'));",
+                  "pm.test('Entrega un JWT', () => pm.expect(datos.token.split('.')).to.have.lengthOf(3));",
+                  "pm.test('Incluye el encabezado Location', () => pm.response.to.have.header('Location'));",
+                  "pm.test('No expone contraseñas ni hashes', () => {",
+                  "  pm.expect(pm.response.text()).to.not.include('clave');",
+                  "  pm.expect(pm.response.text()).to.not.include('$2b$');",
+                  "});",
+                  "pm.environment.set('tokenNuevo', datos.token);",
+                  "pm.environment.set('nuevoId', datos.usuario.id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/registro",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "registro"
+              ]
+            },
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombreUsuario\": \"{{nombreNuevo}}\",\n  \"correo\": \"{{correoNuevo}}\",\n  \"clave\": \"clave123\",\n  \"region\": \"Biobío\",\n  \"comuna\": \"Talcahuano\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Registro con correo duplicado",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 409', () => pm.response.to.have.status(409));",
+                  "pm.test('Incluye un mensaje de error comprensible', () => pm.expect(pm.response.json().mensaje).to.be.a('string').and.not.empty);",
+                  "pm.test('Informa el error del campo \"correo\"', () => {",
+                  "  const errores = pm.response.json().errores || [];",
+                  "  pm.expect(errores.map((e) => e.campo)).to.include('correo');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/registro",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "registro"
+              ]
+            },
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombreUsuario\": \"otro_{{nombreNuevo}}\",\n  \"correo\": \"{{correoNuevo}}\",\n  \"clave\": \"clave123\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Registro con datos inválidos",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 400', () => pm.response.to.have.status(400));",
+                  "pm.test('Incluye un mensaje de error comprensible', () => pm.expect(pm.response.json().mensaje).to.be.a('string').and.not.empty);",
+                  "pm.test('Informa el error del campo \"nombreUsuario\"', () => {",
+                  "  const errores = pm.response.json().errores || [];",
+                  "  pm.expect(errores.map((e) => e.campo)).to.include('nombreUsuario');",
+                  "});",
+                  "pm.test('Informa el error del campo \"correo\"', () => {",
+                  "  const errores = pm.response.json().errores || [];",
+                  "  pm.expect(errores.map((e) => e.campo)).to.include('correo');",
+                  "});",
+                  "pm.test('Informa el error del campo \"clave\"', () => {",
+                  "  const errores = pm.response.json().errores || [];",
+                  "  pm.expect(errores.map((e) => e.campo)).to.include('clave');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/registro",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "registro"
+              ]
+            },
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombreUsuario\": \"ab\",\n  \"correo\": \"correo-sin-formato\",\n  \"clave\": \"123\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Login usuario (sebastian_r)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200', () => pm.response.to.have.status(200));",
+                  "const datos = pm.response.json();",
+                  "pm.test('Entrega un JWT y los datos del usuario', () => {",
+                  "  pm.expect(datos.token.split('.')).to.have.lengthOf(3);",
+                  "  pm.expect(datos.usuario.correo).to.eql('usuario@replay.cl');",
+                  "});",
+                  "pm.test('El token solo contiene sub, rol y fechas', () => {",
+                  "  const contenido = JSON.parse(atob(datos.token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')));",
+                  "  pm.expect(Object.keys(contenido).sort()).to.eql(['exp', 'iat', 'rol', 'sub']);",
+                  "});",
+                  "pm.test('No expone contraseñas ni hashes', () => {",
+                  "  pm.expect(pm.response.text()).to.not.include('clave');",
+                  "  pm.expect(pm.response.text()).to.not.include('$2b$');",
+                  "});",
+                  "pm.environment.set('tokenUsuario', datos.token);",
+                  "pm.environment.set('usuarioId', datos.usuario.id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"correo\": \"usuario@replay.cl\",\n  \"clave\": \"replay123\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Login segunda cuenta (camila_v)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200', () => pm.response.to.have.status(200));",
+                  "const datos = pm.response.json();",
+                  "pm.test('Entrega un JWT y los datos del usuario', () => {",
+                  "  pm.expect(datos.token.split('.')).to.have.lengthOf(3);",
+                  "  pm.expect(datos.usuario.correo).to.eql('camila@replay.cl');",
+                  "});",
+                  "pm.test('El token solo contiene sub, rol y fechas', () => {",
+                  "  const contenido = JSON.parse(atob(datos.token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')));",
+                  "  pm.expect(Object.keys(contenido).sort()).to.eql(['exp', 'iat', 'rol', 'sub']);",
+                  "});",
+                  "pm.test('No expone contraseñas ni hashes', () => {",
+                  "  pm.expect(pm.response.text()).to.not.include('clave');",
+                  "  pm.expect(pm.response.text()).to.not.include('$2b$');",
+                  "});",
+                  "pm.environment.set('tokenCamila', datos.token);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"correo\": \"camila@replay.cl\",\n  \"clave\": \"replay123\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Login administrador",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200', () => pm.response.to.have.status(200));",
+                  "const datos = pm.response.json();",
+                  "pm.test('Entrega un JWT y los datos del usuario', () => {",
+                  "  pm.expect(datos.token.split('.')).to.have.lengthOf(3);",
+                  "  pm.expect(datos.usuario.correo).to.eql('admin@replay.cl');",
+                  "});",
+                  "pm.test('El token solo contiene sub, rol y fechas', () => {",
+                  "  const contenido = JSON.parse(atob(datos.token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')));",
+                  "  pm.expect(Object.keys(contenido).sort()).to.eql(['exp', 'iat', 'rol', 'sub']);",
+                  "});",
+                  "pm.test('No expone contraseñas ni hashes', () => {",
+                  "  pm.expect(pm.response.text()).to.not.include('clave');",
+                  "  pm.expect(pm.response.text()).to.not.include('$2b$');",
+                  "});",
+                  "pm.environment.set('tokenAdmin', datos.token);",
+                  "pm.test('Rol administrador', () => pm.expect(datos.usuario.rol).to.eql('administrador'));",
+                  "pm.environment.set('adminId', datos.usuario.id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"correo\": \"admin@replay.cl\",\n  \"clave\": \"replay123\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Login con contraseña incorrecta",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 401', () => pm.response.to.have.status(401));",
+                  "pm.test('Incluye un mensaje de error comprensible', () => pm.expect(pm.response.json().mensaje).to.be.a('string').and.not.empty);",
+                  "pm.test('No entrega token', () => pm.expect(pm.response.json().token).to.be.undefined);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"correo\": \"usuario@replay.cl\",\n  \"clave\": \"incorrecta1\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Perfil con token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Devuelve la cuenta autenticada', () => pm.expect(pm.response.json().correo).to.eql('usuario@replay.cl'));",
+                  "pm.test('No expone contraseñas ni hashes', () => {",
+                  "  pm.expect(pm.response.text()).to.not.include('clave');",
+                  "  pm.expect(pm.response.text()).to.not.include('$2b$');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/auth/perfil",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "perfil"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenUsuario}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Perfil sin token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 401', () => pm.response.to.have.status(401));",
+                  "pm.test('Incluye un mensaje de error comprensible', () => pm.expect(pm.response.json().mensaje).to.be.a('string').and.not.empty);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/auth/perfil",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "perfil"
+              ]
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          }
+        },
+        {
+          "name": "Perfil con token manipulado",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.environment.set('tokenManipulado', pm.environment.get('tokenUsuario') + 'x');"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 401', () => pm.response.to.have.status(401));",
+                  "pm.test('Incluye un mensaje de error comprensible', () => pm.expect(pm.response.json().mensaje).to.be.a('string').and.not.empty);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/auth/perfil",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "perfil"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenManipulado}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Catálogo y perfiles públicos (RF-01, RF-02)",
+      "item": [
+        {
+          "name": "Catálogos para formularios",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Incluye consolas, géneros y regiones con comunas', () => {",
+                  "  const datos = pm.response.json();",
+                  "  pm.expect(datos.consolas).to.include('Nintendo Switch');",
+                  "  pm.expect(datos.regiones[0].comunas).to.be.an('array').that.is.not.empty;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/catalogos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "catalogos"
+              ]
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          }
+        },
+        {
+          "name": "Listar catálogo",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200', () => pm.response.to.have.status(200));",
+                  "pm.test('No muestra publicaciones vendidas ni ocultas', () => {",
+                  "  pm.response.json().forEach((p) => {",
+                  "    pm.expect(p.estadoPublicacion).to.not.eql('vendida');",
+                  "    pm.expect(p.oculta).to.eql(false);",
+                  "  });",
+                  "});",
+                  "pm.test('Responde en menos de 3 segundos (RNF-REN-01)', () => pm.expect(pm.response.responseTime).to.be.below(3000));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/publicaciones",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "publicaciones"
+              ]
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          }
+        },
+        {
+          "name": "Buscar sin tildes ni mayúsculas",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Encuentra Pokémon Ultra Sun', () => pm.expect(pm.response.json().map((p) => p.titulo)).to.include('Pokémon Ultra Sun'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/publicaciones?texto=POKEMON",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "publicaciones"
+              ],
+              "query": [
+                {
+                  "key": "texto",
+                  "value": "POKEMON"
+                }
+              ]
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          }
+        },
+        {
+          "name": "Filtrar por consola y precio máximo",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Todas cumplen los filtros', () => {",
+                  "  pm.response.json().forEach((p) => {",
+                  "    pm.expect(p.consola).to.eql('Nintendo Switch');",
+                  "    pm.expect(p.precio).to.be.at.most(35000);",
+                  "  });",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/publicaciones?consola=Nintendo%20Switch&precioMaximo=35000",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "publicaciones"
+              ],
+              "query": [
+                {
+                  "key": "consola",
+                  "value": "Nintendo Switch"
+                },
+                {
+                  "key": "precioMaximo",
+                  "value": "35000"
+                }
+              ]
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          }
+        },
+        {
+          "name": "Filtro con valor inválido",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 400', () => pm.response.to.have.status(400));",
+                  "pm.test('Informa el error del campo \"precioMaximo\"', () => {",
+                  "  const errores = pm.response.json().errores || [];",
+                  "  pm.expect(errores.map((e) => e.campo)).to.include('precioMaximo');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/publicaciones?precioMaximo=barato",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "publicaciones"
+              ],
+              "query": [
+                {
+                  "key": "precioMaximo",
+                  "value": "barato"
+                }
+              ]
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          }
+        },
+        {
+          "name": "Detalle de publicación",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Incluye los datos estandarizados', () => {",
+                  "  const p = pm.response.json();",
+                  "  ['titulo', 'consola', 'genero', 'precio', 'estadoConservacion', 'region', 'comuna', 'entregas', 'vendedorId'].forEach((campo) => pm.expect(p).to.have.property(campo));",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/publicaciones/1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "publicaciones",
+                "1"
+              ]
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          }
+        },
+        {
+          "name": "Detalle inexistente",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 404', () => pm.response.to.have.status(404));",
+                  "pm.test('Incluye un mensaje de error comprensible', () => pm.expect(pm.response.json().mensaje).to.be.a('string').and.not.empty);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/publicaciones/999999",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "publicaciones",
+                "999999"
+              ]
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          }
+        },
+        {
+          "name": "Detalle con identificador inválido",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 400', () => pm.response.to.have.status(400));",
+                  "pm.test('Informa el error del campo \"id\"', () => {",
+                  "  const errores = pm.response.json().errores || [];",
+                  "  pm.expect(errores.map((e) => e.campo)).to.include('id');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/publicaciones/abc",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "publicaciones",
+                "abc"
+              ]
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          }
+        },
+        {
+          "name": "Perfil público del vendedor",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200', () => pm.response.to.have.status(200));",
+                  "pm.test('No expone el correo', () => pm.expect(pm.response.json()).to.not.have.property('correo'));",
+                  "pm.test('Incluye la reputación', () => pm.expect(pm.response.json().reputacion).to.be.a('number'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/usuarios/3",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "usuarios",
+                "3"
+              ]
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. Publicaciones (RF-03, RF-04, RF-10)",
+      "item": [
+        {
+          "name": "Crear publicación",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 201', () => pm.response.to.have.status(201));",
+                  "const p = pm.response.json();",
+                  "pm.test('Queda activa y pertenece a quien publica', () => {",
+                  "  pm.expect(p.estadoPublicacion).to.eql('activa');",
+                  "  pm.expect(p.vendedorId).to.eql(pm.environment.get('usuarioId'));",
+                  "});",
+                  "pm.test('Incluye el encabezado Location', () => pm.response.to.have.header('Location'));",
+                  "pm.environment.set('publicacionId', p.id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/publicaciones",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "publicaciones"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenUsuario}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"titulo\": \"Hollow Knight\",\n  \"consola\": \"Nintendo Switch\",\n  \"genero\": \"Plataformas\",\n  \"estadoConservacion\": \"Como nuevo\",\n  \"precio\": 15990,\n  \"descripcion\": \"Cartucho en perfecto estado, con caja original. Se puede probar antes de comprar.\",\n  \"region\": \"Valparaíso\",\n  \"comuna\": \"Quilpué\",\n  \"entregas\": [\n    \"Retiro en persona\",\n    \"Envío por pagar\"\n  ],\n  \"incluyeCaja\": true,\n  \"incluyeManual\": false\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Crear sin sesión",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 401', () => pm.response.to.have.status(401));",
+                  "pm.test('Incluye un mensaje de error comprensible', () => pm.expect(pm.response.json().mensaje).to.be.a('string').and.not.empty);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/publicaciones",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "publicaciones"
+              ]
+            },
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"titulo\": \"Hollow Knight\",\n  \"consola\": \"Nintendo Switch\",\n  \"genero\": \"Plataformas\",\n  \"estadoConservacion\": \"Como nuevo\",\n  \"precio\": 15990,\n  \"descripcion\": \"Cartucho en perfecto estado, con caja original. Se puede probar antes de comprar.\",\n  \"region\": \"Valparaíso\",\n  \"comuna\": \"Quilpué\",\n  \"entregas\": [\n    \"Retiro en persona\",\n    \"Envío por pagar\"\n  ],\n  \"incluyeCaja\": true,\n  \"incluyeManual\": false\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Crear con datos inválidos",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 400', () => pm.response.to.have.status(400));",
+                  "pm.test('Informa el error del campo \"titulo\"', () => {",
+                  "  const errores = pm.response.json().errores || [];",
+                  "  pm.expect(errores.map((e) => e.campo)).to.include('titulo');",
+                  "});",
+                  "pm.test('Informa el error del campo \"precio\"', () => {",
+                  "  const errores = pm.response.json().errores || [];",
+                  "  pm.expect(errores.map((e) => e.campo)).to.include('precio');",
+                  "});",
+                  "pm.test('Informa el error del campo \"descripcion\"', () => {",
+                  "  const errores = pm.response.json().errores || [];",
+                  "  pm.expect(errores.map((e) => e.campo)).to.include('descripcion');",
+                  "});",
+                  "pm.test('Informa el error del campo \"entregas\"', () => {",
+                  "  const errores = pm.response.json().errores || [];",
+                  "  pm.expect(errores.map((e) => e.campo)).to.include('entregas');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/publicaciones",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "publicaciones"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenUsuario}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"titulo\": \"ab\",\n  \"precio\": 0,\n  \"descripcion\": \"corta\",\n  \"entregas\": []\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Crear con comuna de otra región",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 400', () => pm.response.to.have.status(400));",
+                  "pm.test('Informa el error del campo \"comuna\"', () => {",
+                  "  const errores = pm.response.json().errores || [];",
+                  "  pm.expect(errores.map((e) => e.campo)).to.include('comuna');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/publicaciones",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "publicaciones"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenUsuario}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"titulo\": \"Hollow Knight\",\n  \"consola\": \"Nintendo Switch\",\n  \"genero\": \"Plataformas\",\n  \"estadoConservacion\": \"Como nuevo\",\n  \"precio\": 15990,\n  \"descripcion\": \"Cartucho en perfecto estado, con caja original. Se puede probar antes de comprar.\",\n  \"region\": \"Valparaíso\",\n  \"comuna\": \"Maipú\",\n  \"entregas\": [\n    \"Retiro en persona\",\n    \"Envío por pagar\"\n  ],\n  \"incluyeCaja\": true,\n  \"incluyeManual\": false\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Crear como administrador (rol no permitido)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 403', () => pm.response.to.have.status(403));",
+                  "pm.test('Incluye un mensaje de error comprensible', () => pm.expect(pm.response.json().mensaje).to.be.a('string').and.not.empty);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/publicaciones",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "publicaciones"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenAdmin}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"titulo\": \"Hollow Knight\",\n  \"consola\": \"Nintendo Switch\",\n  \"genero\": \"Plataformas\",\n  \"estadoConservacion\": \"Como nuevo\",\n  \"precio\": 15990,\n  \"descripcion\": \"Cartucho en perfecto estado, con caja original. Se puede probar antes de comprar.\",\n  \"region\": \"Valparaíso\",\n  \"comuna\": \"Quilpué\",\n  \"entregas\": [\n    \"Retiro en persona\",\n    \"Envío por pagar\"\n  ],\n  \"incluyeCaja\": true,\n  \"incluyeManual\": false\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Editar publicación propia",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Guarda los cambios', () => {",
+                  "  pm.expect(pm.response.json().precio).to.eql(13990);",
+                  "  pm.expect(pm.response.json().incluyeManual).to.eql(true);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/publicaciones/{{publicacionId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "publicaciones",
+                "{{publicacionId}}"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenUsuario}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"titulo\": \"Hollow Knight\",\n  \"consola\": \"Nintendo Switch\",\n  \"genero\": \"Plataformas\",\n  \"estadoConservacion\": \"Como nuevo\",\n  \"precio\": 13990,\n  \"descripcion\": \"Cartucho en perfecto estado, con caja original. Se puede probar antes de comprar.\",\n  \"region\": \"Valparaíso\",\n  \"comuna\": \"Quilpué\",\n  \"entregas\": [\n    \"Retiro en persona\",\n    \"Envío por pagar\"\n  ],\n  \"incluyeCaja\": true,\n  \"incluyeManual\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Editar publicación ajena",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 403', () => pm.response.to.have.status(403));",
+                  "pm.test('Incluye un mensaje de error comprensible', () => pm.expect(pm.response.json().mensaje).to.be.a('string').and.not.empty);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/publicaciones/{{publicacionId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "publicaciones",
+                "{{publicacionId}}"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenCamila}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"titulo\": \"Hollow Knight\",\n  \"consola\": \"Nintendo Switch\",\n  \"genero\": \"Plataformas\",\n  \"estadoConservacion\": \"Como nuevo\",\n  \"precio\": 15990,\n  \"descripcion\": \"Cartucho en perfecto estado, con caja original. Se puede probar antes de comprar.\",\n  \"region\": \"Valparaíso\",\n  \"comuna\": \"Quilpué\",\n  \"entregas\": [\n    \"Retiro en persona\",\n    \"Envío por pagar\"\n  ],\n  \"incluyeCaja\": true,\n  \"incluyeManual\": false\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Pausar publicación",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Queda pausada', () => pm.expect(pm.response.json().estadoPublicacion).to.eql('pausada'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/publicaciones/{{publicacionId}}/estado",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "publicaciones",
+                "{{publicacionId}}",
+                "estado"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenUsuario}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"estadoPublicacion\": \"pausada\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Estado de publicación inválido",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 400', () => pm.response.to.have.status(400));",
+                  "pm.test('Informa el error del campo \"estadoPublicacion\"', () => {",
+                  "  const errores = pm.response.json().errores || [];",
+                  "  pm.expect(errores.map((e) => e.campo)).to.include('estadoPublicacion');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/publicaciones/{{publicacionId}}/estado",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "publicaciones",
+                "{{publicacionId}}",
+                "estado"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenUsuario}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"estadoPublicacion\": \"vendida\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Reactivar publicación",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Queda activa', () => pm.expect(pm.response.json().estadoPublicacion).to.eql('activa'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/publicaciones/{{publicacionId}}/estado",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "publicaciones",
+                "{{publicacionId}}",
+                "estado"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenUsuario}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"estadoPublicacion\": \"activa\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Mis publicaciones",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Incluye la publicación creada', () => pm.expect(pm.response.json().map((p) => p.id)).to.include(pm.environment.get('publicacionId')));",
+                  "pm.test('Solo publicaciones propias', () => pm.response.json().forEach((p) => pm.expect(p.vendedorId).to.eql(pm.environment.get('usuarioId'))));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/publicaciones/mias",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "publicaciones",
+                "mias"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenUsuario}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Moderar con rol usuario",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 403', () => pm.response.to.have.status(403));",
+                  "pm.test('Incluye un mensaje de error comprensible', () => pm.expect(pm.response.json().mensaje).to.be.a('string').and.not.empty);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/publicaciones/{{publicacionId}}/moderacion",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "publicaciones",
+                "{{publicacionId}}",
+                "moderacion"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenUsuario}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"oculta\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Ocultar publicación (administrador)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Queda oculta', () => pm.expect(pm.response.json().oculta).to.eql(true));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/publicaciones/{{publicacionId}}/moderacion",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "publicaciones",
+                "{{publicacionId}}",
+                "moderacion"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenAdmin}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"oculta\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Visitante no ve la publicación oculta",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 404', () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/publicaciones/{{publicacionId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "publicaciones",
+                "{{publicacionId}}"
+              ]
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          }
+        },
+        {
+          "name": "El dueño sí ve su publicación oculta",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Marcada como oculta', () => pm.expect(pm.response.json().oculta).to.eql(true));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/publicaciones/{{publicacionId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "publicaciones",
+                "{{publicacionId}}"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenUsuario}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Mostrar publicación (administrador)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Vuelve a ser visible', () => pm.expect(pm.response.json().oculta).to.eql(false));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/publicaciones/{{publicacionId}}/moderacion",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "publicaciones",
+                "{{publicacionId}}",
+                "moderacion"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenAdmin}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"oculta\": false\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. Operaciones (RF-06, RF-07)",
+      "item": [
+        {
+          "name": "Comprar publicación propia",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 409', () => pm.response.to.have.status(409));",
+                  "pm.test('Incluye un mensaje de error comprensible', () => pm.expect(pm.response.json().mensaje).to.be.a('string').and.not.empty);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/operaciones",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "operaciones"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenUsuario}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"publicacionId\": {{publicacionId}},\n  \"modalidadEntrega\": \"Retiro en persona\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Comprar con modalidad no ofrecida",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 400', () => pm.response.to.have.status(400));",
+                  "pm.test('Informa el error del campo \"modalidadEntrega\"', () => {",
+                  "  const errores = pm.response.json().errores || [];",
+                  "  pm.expect(errores.map((e) => e.campo)).to.include('modalidadEntrega');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/operaciones",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "operaciones"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenCamila}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"publicacionId\": {{publicacionId}},\n  \"modalidadEntrega\": \"Punto de encuentro\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Solicitar compra",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 201', () => pm.response.to.have.status(201));",
+                  "const d = pm.response.json();",
+                  "pm.test('Queda pendiente y con la contraparte', () => {",
+                  "  pm.expect(d.operacion.estado).to.eql('pendiente');",
+                  "  pm.expect(d.rolUsuario).to.eql('comprador');",
+                  "  pm.expect(d.contraparte.id).to.eql(pm.environment.get('usuarioId'));",
+                  "});",
+                  "pm.test('No expone contraseñas ni hashes', () => {",
+                  "  pm.expect(pm.response.text()).to.not.include('clave');",
+                  "  pm.expect(pm.response.text()).to.not.include('$2b$');",
+                  "});",
+                  "pm.environment.set('operacionId', d.operacion.id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/operaciones",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "operaciones"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenCamila}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"publicacionId\": {{publicacionId}},\n  \"modalidadEntrega\": \"Envío por pagar\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Solicitud duplicada",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 409', () => pm.response.to.have.status(409));",
+                  "pm.test('Incluye un mensaje de error comprensible', () => pm.expect(pm.response.json().mensaje).to.be.a('string').and.not.empty);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/operaciones",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "operaciones"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenCamila}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"publicacionId\": {{publicacionId}},\n  \"modalidadEntrega\": \"Envío por pagar\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Comprar como administrador (rol no permitido)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 403', () => pm.response.to.have.status(403));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/operaciones",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "operaciones"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenAdmin}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"publicacionId\": {{publicacionId}},\n  \"modalidadEntrega\": \"Envío por pagar\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Compras y ventas del comprador",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200', () => pm.response.to.have.status(200));",
+                  "pm.test('La compra aparece en compras', () => pm.expect(pm.response.json().compras.map((c) => c.operacion.id)).to.include(pm.environment.get('operacionId')));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/operaciones",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "operaciones"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenCamila}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "El comprador no puede confirmar",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 409', () => pm.response.to.have.status(409));",
+                  "pm.test('Incluye un mensaje de error comprensible', () => pm.expect(pm.response.json().mensaje).to.be.a('string').and.not.empty);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/operaciones/{{operacionId}}/estado",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "operaciones",
+                "{{operacionId}}",
+                "estado"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenCamila}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"estado\": \"confirmada\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Completar sin confirmar (transición inválida)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 409', () => pm.response.to.have.status(409));",
+                  "pm.test('Incluye un mensaje de error comprensible', () => pm.expect(pm.response.json().mensaje).to.be.a('string').and.not.empty);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/operaciones/{{operacionId}}/estado",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "operaciones",
+                "{{operacionId}}",
+                "estado"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenUsuario}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"estado\": \"completada\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Un tercero no puede cambiar la operación",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 403', () => pm.response.to.have.status(403));",
+                  "pm.test('Incluye un mensaje de error comprensible', () => pm.expect(pm.response.json().mensaje).to.be.a('string').and.not.empty);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/operaciones/{{operacionId}}/estado",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "operaciones",
+                "{{operacionId}}",
+                "estado"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenNuevo}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"estado\": \"cancelada\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Vendedor confirma",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Queda confirmada', () => pm.expect(pm.response.json().operacion.estado).to.eql('confirmada'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/operaciones/{{operacionId}}/estado",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "operaciones",
+                "{{operacionId}}",
+                "estado"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenUsuario}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"estado\": \"confirmada\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Eliminar publicación con operaciones",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 409', () => pm.response.to.have.status(409));",
+                  "pm.test('Incluye un mensaje de error comprensible', () => pm.expect(pm.response.json().mensaje).to.be.a('string').and.not.empty);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/publicaciones/{{publicacionId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "publicaciones",
+                "{{publicacionId}}"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenUsuario}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Vendedor completa",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Queda completada', () => pm.expect(pm.response.json().operacion.estado).to.eql('completada'));",
+                  "pm.test('La publicación queda vendida', () => pm.expect(pm.response.json().publicacion.estadoPublicacion).to.eql('vendida'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/operaciones/{{operacionId}}/estado",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "operaciones",
+                "{{operacionId}}",
+                "estado"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenUsuario}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"estado\": \"completada\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Editar publicación vendida",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 409', () => pm.response.to.have.status(409));",
+                  "pm.test('Incluye un mensaje de error comprensible', () => pm.expect(pm.response.json().mensaje).to.be.a('string').and.not.empty);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/publicaciones/{{publicacionId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "publicaciones",
+                "{{publicacionId}}"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenUsuario}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"titulo\": \"Hollow Knight\",\n  \"consola\": \"Nintendo Switch\",\n  \"genero\": \"Plataformas\",\n  \"estadoConservacion\": \"Como nuevo\",\n  \"precio\": 15990,\n  \"descripcion\": \"Cartucho en perfecto estado, con caja original. Se puede probar antes de comprar.\",\n  \"region\": \"Valparaíso\",\n  \"comuna\": \"Quilpué\",\n  \"entregas\": [\n    \"Retiro en persona\",\n    \"Envío por pagar\"\n  ],\n  \"incluyeCaja\": true,\n  \"incluyeManual\": false\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "5. Eliminar publicación (RF-04)",
+      "item": [
+        {
+          "name": "Crear publicación temporal",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 201', () => pm.response.to.have.status(201));",
+                  "pm.environment.set('publicacionTemporalId', pm.response.json().id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/publicaciones",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "publicaciones"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenUsuario}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"titulo\": \"Publicación para eliminar\",\n  \"consola\": \"Nintendo Switch\",\n  \"genero\": \"Plataformas\",\n  \"estadoConservacion\": \"Como nuevo\",\n  \"precio\": 15990,\n  \"descripcion\": \"Cartucho en perfecto estado, con caja original. Se puede probar antes de comprar.\",\n  \"region\": \"Valparaíso\",\n  \"comuna\": \"Quilpué\",\n  \"entregas\": [\n    \"Retiro en persona\",\n    \"Envío por pagar\"\n  ],\n  \"incluyeCaja\": true,\n  \"incluyeManual\": false\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Eliminar publicación ajena",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 403', () => pm.response.to.have.status(403));",
+                  "pm.test('Incluye un mensaje de error comprensible', () => pm.expect(pm.response.json().mensaje).to.be.a('string').and.not.empty);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/publicaciones/{{publicacionTemporalId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "publicaciones",
+                "{{publicacionTemporalId}}"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenCamila}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Eliminar publicación propia",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 204', () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/publicaciones/{{publicacionTemporalId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "publicaciones",
+                "{{publicacionTemporalId}}"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenUsuario}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "La publicación eliminada ya no existe",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 404', () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/publicaciones/{{publicacionTemporalId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "publicaciones",
+                "{{publicacionTemporalId}}"
+              ]
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "6. Administración y roles (FT-04, RNF-SEG-02)",
+      "item": [
+        {
+          "name": "Listar usuarios con rol usuario",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 403', () => pm.response.to.have.status(403));",
+                  "pm.test('Incluye un mensaje de error comprensible', () => pm.expect(pm.response.json().mensaje).to.be.a('string').and.not.empty);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/usuarios",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "usuarios"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenUsuario}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Listar usuarios sin sesión",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 401', () => pm.response.to.have.status(401));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/usuarios",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "usuarios"
+              ]
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          }
+        },
+        {
+          "name": "Listar usuarios (administrador)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Incluye correo y estado de cada cuenta', () => pm.response.json().forEach((u) => { pm.expect(u).to.have.property('correo'); pm.expect(u).to.have.property('activo'); }));",
+                  "pm.test('No expone contraseñas ni hashes', () => {",
+                  "  pm.expect(pm.response.text()).to.not.include('clave');",
+                  "  pm.expect(pm.response.text()).to.not.include('$2b$');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/usuarios",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "usuarios"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenAdmin}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Desactivar cuenta",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Queda desactivada', () => pm.expect(pm.response.json().activo).to.eql(false));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/usuarios/{{nuevoId}}/estado",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "usuarios",
+                "{{nuevoId}}",
+                "estado"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenAdmin}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"activo\": false\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Login de cuenta desactivada",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 403', () => pm.response.to.have.status(403));",
+                  "pm.test('Incluye un mensaje de error comprensible', () => pm.expect(pm.response.json().mensaje).to.be.a('string').and.not.empty);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"correo\": \"{{correoNuevo}}\",\n  \"clave\": \"clave123\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Token de cuenta desactivada",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 401', () => pm.response.to.have.status(401));",
+                  "pm.test('Incluye un mensaje de error comprensible', () => pm.expect(pm.response.json().mensaje).to.be.a('string').and.not.empty);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/auth/perfil",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "perfil"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenNuevo}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "El administrador no puede desactivarse",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 400', () => pm.response.to.have.status(400));",
+                  "pm.test('Incluye un mensaje de error comprensible', () => pm.expect(pm.response.json().mensaje).to.be.a('string').and.not.empty);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/usuarios/{{adminId}}/estado",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "usuarios",
+                "{{adminId}}",
+                "estado"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenAdmin}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"activo\": false\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Reactivar cuenta",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Queda activa', () => pm.expect(pm.response.json().activo).to.eql(true));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/usuarios/{{nuevoId}}/estado",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "usuarios",
+                "{{nuevoId}}",
+                "estado"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenAdmin}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"activo\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Actualizar perfil propio",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Guarda la nueva ubicación', () => pm.expect(pm.response.json().comuna).to.eql('Providencia'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/usuarios/perfil",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "usuarios",
+                "perfil"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenNuevo}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"region\": \"Metropolitana\",\n  \"comuna\": \"Providencia\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "7. Errores generales",
+      "item": [
+        {
+          "name": "JSON mal formado",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 400', () => pm.response.to.have.status(400));",
+                  "pm.test('Incluye un mensaje de error comprensible', () => pm.expect(pm.response.json().mensaje).to.be.a('string').and.not.empty);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"correo\": \"usuario@replay.cl\", ",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Ruta inexistente",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 404', () => pm.response.to.have.status(404));",
+                  "pm.test('Incluye un mensaje de error comprensible', () => pm.expect(pm.response.json().mensaje).to.be.a('string').and.not.empty);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/ruta-inexistente",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ruta-inexistente"
+              ]
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

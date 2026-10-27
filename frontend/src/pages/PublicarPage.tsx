@@ -1,12 +1,13 @@
 /**
- * Publicar videojuego (RF-03). Ruta protegida: exige sesión iniciada.
+ * Publicar videojuego (RF-03) y editar una publicación propia (RF-04). Ruta protegida.
  *
  * Reúne los datos obligatorios definidos por la plataforma, valida cada campo antes de enviar,
  * conserva lo escrito cuando hay errores y pide confirmación antes de publicar
  * (documento, sección 4.7: formulario de publicación).
  *
- * En esta entrega los datos son estáticos, por lo que la publicación no se agrega al catálogo:
- * se muestra el flujo completo con su validación y su confirmación.
+ * La misma página atiende /publicar (crear) y /publicaciones/:id/editar (editar): en modo edición
+ * precarga los datos desde la API. El backend vuelve a validar todo y, si rechaza algún campo,
+ * su mensaje se muestra junto al control correspondiente.
  */
 import {
   IonAlert,
@@ -25,9 +26,12 @@ import {
   IonToggle,
   useIonRouter,
 } from '@ionic/react';
-import { addOutline, closeCircle, imageOutline } from 'ionicons/icons';
-import React, { useState } from 'react';
+import { addOutline, alertCircleOutline, closeCircle, imageOutline } from 'ionicons/icons';
+import React, { useEffect, useState } from 'react';
+import { useParams } from 'react-router-dom';
 import EncabezadoPagina from '../components/EncabezadoPagina';
+import MensajeVacio from '../components/MensajeVacio';
+import { useSesion } from '../context/SesionContext';
 import {
   CONSOLAS,
   ESTADOS_CONSERVACION,
@@ -35,9 +39,14 @@ import {
   MODALIDADES_ENTREGA,
   REGIONES,
 } from '../data/catalogos';
-import type { ModalidadEntrega } from '../models';
+import type { DatosPublicacion, EstadoConservacion, ModalidadEntrega } from '../models';
 import { RUTAS } from '../routes/rutas';
-import { demora } from '../utils/demora';
+import { erroresPorCampo, mensajeDeError } from '../services/api';
+import {
+  actualizarPublicacion,
+  crearPublicacion,
+  obtenerPublicacion,
+} from '../services/publicacionesService';
 
 interface ErroresPublicacion {
   titulo?: string;
@@ -56,6 +65,9 @@ const MAXIMO_FOTOS = 4;
 
 const PublicarPage: React.FC = () => {
   const router = useIonRouter();
+  const { usuario } = useSesion();
+  const { id } = useParams<{ id?: string }>();
+  const editando = Boolean(id);
 
   const [titulo, setTitulo] = useState('');
   const [consola, setConsola] = useState('');
@@ -74,6 +86,80 @@ const PublicarPage: React.FC = () => {
   const [confirmando, setConfirmando] = useState(false);
   const [enviando, setEnviando] = useState(false);
   const [publicado, setPublicado] = useState(false);
+  const [errorGeneral, setErrorGeneral] = useState('');
+  const [cargandoEdicion, setCargandoEdicion] = useState(editando);
+  const [errorEdicion, setErrorEdicion] = useState('');
+
+  /** Deja el formulario vacío, listo para una nueva publicación. */
+  const limpiar = () => {
+    setTitulo('');
+    setConsola('');
+    setGenero('');
+    setEstadoConservacion('');
+    setPrecio('');
+    setDescripcion('');
+    setRegion('');
+    setComuna('');
+    setEntregas([]);
+    setFotos([]);
+    setIncluyeCaja(true);
+    setIncluyeManual(false);
+    setErrores({});
+    setErrorGeneral('');
+  };
+
+  // En modo edición se precargan los datos de la publicación propia.
+  useEffect(() => {
+    if (!id) {
+      return undefined;
+    }
+    let vigente = true;
+    setCargandoEdicion(true);
+    setErrorEdicion('');
+
+    obtenerPublicacion(id)
+      .then((publicacion) => {
+        if (!vigente) {
+          return;
+        }
+        if (!publicacion || publicacion.vendedorId !== usuario?.id) {
+          setErrorEdicion('La publicación no existe o no te pertenece.');
+          return;
+        }
+        if (publicacion.estadoPublicacion === 'vendida') {
+          setErrorEdicion('Esta publicación ya fue vendida y no se puede editar.');
+          return;
+        }
+        setTitulo(publicacion.titulo);
+        setConsola(publicacion.consola);
+        setGenero(publicacion.genero);
+        setEstadoConservacion(publicacion.estadoConservacion);
+        setPrecio(String(publicacion.precio));
+        setDescripcion(publicacion.descripcion);
+        setRegion(publicacion.region);
+        setComuna(publicacion.comuna);
+        setEntregas(publicacion.entregas);
+        setIncluyeCaja(publicacion.incluyeCaja);
+        setIncluyeManual(publicacion.incluyeManual);
+        // Las fotografías aún son simuladas: se muestra una para no exigir agregarla de nuevo.
+        setFotos([Date.now()]);
+        setErrores({});
+      })
+      .catch((causa) => {
+        if (vigente) {
+          setErrorEdicion(mensajeDeError(causa));
+        }
+      })
+      .finally(() => {
+        if (vigente) {
+          setCargandoEdicion(false);
+        }
+      });
+
+    return () => {
+      vigente = false;
+    };
+  }, [id, usuario?.id]);
 
   const comunasDisponibles = REGIONES.find((item) => item.nombre === region)?.comunas ?? [];
 
@@ -128,23 +214,92 @@ const PublicarPage: React.FC = () => {
 
   const revisar = (evento: React.FormEvent) => {
     evento.preventDefault();
+    setErrorGeneral('');
     if (validar()) {
       setConfirmando(true);
     }
   };
 
   const publicar = async () => {
+    const datos: DatosPublicacion = {
+      titulo: titulo.trim(),
+      consola,
+      genero,
+      estadoConservacion: estadoConservacion as EstadoConservacion,
+      precio: Number(precio),
+      descripcion: descripcion.trim(),
+      region,
+      comuna,
+      entregas,
+      incluyeCaja,
+      incluyeManual,
+    };
+
     setEnviando(true);
-    await demora(400);
-    setEnviando(false);
-    setPublicado(true);
+    setErrorGeneral('');
+    try {
+      if (id) {
+        await actualizarPublicacion(Number(id), datos);
+      } else {
+        await crearPublicacion(datos);
+        limpiar();
+      }
+      setPublicado(true);
+    } catch (error) {
+      setErrores(erroresPorCampo(error));
+      setErrorGeneral(mensajeDeError(error, 'No fue posible guardar la publicación.'));
+    } finally {
+      setEnviando(false);
+    }
   };
+
+  const tituloPagina = editando ? 'Editar publicación' : 'Publicar videojuego';
+
+  /**
+   * Tras guardar o cancelar se vuelve a "Mis publicaciones". En modo edición se retrocede, porque
+   * la página se abrió desde esa lista; si se entró directo por URL no hay historial y se navega.
+   */
+  const irAMisPublicaciones = () => {
+    if (editando && router.canGoBack()) {
+      router.goBack();
+    } else {
+      router.push(RUTAS.misPublicaciones, 'root', 'replace');
+    }
+  };
+
+  if (editando && (cargandoEdicion || errorEdicion)) {
+    return (
+      <IonPage>
+        <EncabezadoPagina titulo={tituloPagina} conVolver rutaVolver={RUTAS.misPublicaciones} />
+        <IonContent>
+          {cargandoEdicion ? (
+            <div className="pantalla-transicion">
+              <IonSpinner name="crescent" />
+              <IonText color="medium">
+                <p>Cargando publicación…</p>
+              </IonText>
+            </div>
+          ) : (
+            <MensajeVacio icono={alertCircleOutline} titulo="No es posible editar" descripcion={errorEdicion}>
+              <IonButton routerLink={RUTAS.misPublicaciones} routerDirection="root">
+                Ir a mis publicaciones
+              </IonButton>
+            </MensajeVacio>
+          )}
+        </IonContent>
+      </IonPage>
+    );
+  }
 
   const hayErrores = Object.keys(errores).length > 0;
 
   return (
     <IonPage>
-      <EncabezadoPagina titulo="Publicar videojuego" />
+      {editando ? (
+        <EncabezadoPagina titulo={tituloPagina} conVolver rutaVolver={RUTAS.misPublicaciones} />
+      ) : (
+        <EncabezadoPagina titulo={tituloPagina} />
+      )}
 
       <IonContent>
         <form className="formulario" onSubmit={revisar} noValidate>
@@ -301,8 +456,8 @@ const PublicarPage: React.FC = () => {
           <h2 className="titulo-seccion">Fotografías</h2>
           <IonText color="medium">
             <p className="formulario__ayuda">
-              En esta entrega las fotografías se simulan: la carga real de archivos se implementa
-              junto con el backend.
+              En esta entrega las fotografías siguen siendo simuladas: la carga real de archivos
+              queda planificada para la siguiente etapa.
             </p>
           </IonText>
 
@@ -356,22 +511,23 @@ const PublicarPage: React.FC = () => {
           </IonToggle>
 
           <div className="formulario__acciones">
-            {hayErrores && (
+            {(hayErrores || errorGeneral) && (
               <IonNote color="danger">
                 <p className="nota" role="alert">
-                  Revisa los campos marcados en rojo antes de continuar.
+                  {errorGeneral || 'Revisa los campos marcados en rojo antes de continuar.'}
                 </p>
               </IonNote>
             )}
 
             <IonButton type="submit" expand="block" disabled={enviando}>
-              {enviando ? <IonSpinner name="crescent" /> : 'Publicar videojuego'}
+              {enviando ? <IonSpinner name="crescent" /> : editando ? 'Guardar cambios' : 'Publicar videojuego'}
             </IonButton>
             <IonButton
               expand="block"
               fill="clear"
-              routerLink={RUTAS.catalogo}
-              routerDirection="root"
+              {...(editando
+                ? { onClick: irAMisPublicaciones }
+                : { routerLink: RUTAS.catalogo, routerDirection: 'root' as const })}
             >
               Cancelar
             </IonButton>
@@ -381,12 +537,16 @@ const PublicarPage: React.FC = () => {
 
         <IonAlert
           isOpen={confirmando}
-          header="Confirmar publicación"
-          message={`Se publicará "${titulo}" para ${consola} en ${comuna}. ¿Deseas continuar?`}
+          header={editando ? 'Confirmar cambios' : 'Confirmar publicación'}
+          message={
+            editando
+              ? `Se actualizará "${titulo}" con los datos ingresados. ¿Deseas continuar?`
+              : `Se publicará "${titulo}" para ${consola} en ${comuna}. ¿Deseas continuar?`
+          }
           buttons={[
             { text: 'Revisar', role: 'cancel' },
             {
-              text: 'Publicar',
+              text: editando ? 'Guardar' : 'Publicar',
               handler: () => {
                 void publicar();
               },
@@ -397,14 +557,18 @@ const PublicarPage: React.FC = () => {
 
         <IonAlert
           isOpen={publicado}
-          header="Publicación creada"
-          message="Tu videojuego quedaría visible en el catálogo. En esta entrega los datos son de demostración, por lo que el catálogo no se modifica."
+          header={editando ? 'Cambios guardados' : 'Publicación creada'}
+          message={
+            editando
+              ? 'Los cambios ya se ven en el catálogo y en el detalle de la publicación.'
+              : 'Tu videojuego ya está visible en el catálogo.'
+          }
           buttons={[
             {
-              text: 'Volver al catálogo',
+              text: 'Ver mis publicaciones',
               handler: () => {
                 setPublicado(false);
-                router.push(RUTAS.catalogo, 'root', 'replace');
+                irAMisPublicaciones();
               },
             },
           ]}

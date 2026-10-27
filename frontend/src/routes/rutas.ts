@@ -7,14 +7,23 @@ export const RUTAS = {
   catalogo: '/catalogo',
   detalle: '/publicacion/:id',
   publicar: '/publicar',
+  editar: '/publicaciones/:id/editar',
+  misPublicaciones: '/mis-publicaciones',
   operaciones: '/operaciones',
+  admin: '/admin',
+  adminUsuarios: '/admin/usuarios',
   login: '/login',
   registro: '/registro',
 } as const;
 
 /** Construye la ruta al detalle de una publicación concreta. */
-export function rutaDetalle(id: string): string {
+export function rutaDetalle(id: string | number): string {
   return `/publicacion/${id}`;
+}
+
+/** Construye la ruta para editar una publicación propia (RF-04). */
+export function rutaEditar(id: string | number): string {
+  return `/publicaciones/${id}/editar`;
 }
 
 /**

@@ -1,12 +1,9 @@
 /**
- * Consulta del catálogo y del detalle de publicaciones (RF-01, RF-02).
- * Los datos son estáticos en EP1; en EP2 el cuerpo de estas funciones se reemplaza por
- * llamadas fetch a la API REST sin cambiar las páginas ni los componentes.
+ * Catálogo, detalle y gestión de publicaciones contra la API REST (RF-01 a RF-04).
  */
 import { PRECIO_MAXIMO } from '../data/catalogos';
-import { PUBLICACIONES } from '../data/publicaciones';
-import type { FiltrosCatalogo, Publicacion } from '../models';
-import { demora } from '../utils/demora';
+import type { DatosPublicacion, EstadoPublicacion, FiltrosCatalogo, Publicacion } from '../models';
+import { ErrorApi, solicitar } from './api';
 
 /** Estado inicial de los filtros del catálogo: sin filtrar. */
 export const FILTROS_INICIALES: FiltrosCatalogo = {
@@ -18,54 +15,60 @@ export const FILTROS_INICIALES: FiltrosCatalogo = {
   precioMaximo: PRECIO_MAXIMO,
 };
 
-/** Quita tildes para que la búsqueda encuentre "pokemon" y "Pokémon" por igual. */
-function normalizar(texto: string): string {
-  return texto
-    .normalize('NFD')
-    .replace(/[̀-ͯ]/g, '')
-    .toLowerCase()
-    .trim();
-}
-
 /**
- * Publicaciones visibles en el catálogo.
- * Se incluyen las pausadas, marcadas con su estado, para poder mostrar en la demo que una
- * publicación no disponible no permite iniciar una operación (documento, sección 4.7).
- * Las vendidas quedan fuera del catálogo y solo se alcanzan desde el historial de operaciones.
+ * Publicaciones visibles en el catálogo. La API devuelve las activas y las pausadas (marcadas con
+ * su estado) y deja fuera las vendidas y las ocultas por moderación. La búsqueda por texto ignora
+ * mayúsculas y tildes. Con el precio en el tope del control no se filtra por precio.
  */
-export async function listarPublicaciones(filtros: FiltrosCatalogo): Promise<Publicacion[]> {
-  await demora();
-  const texto = normalizar(filtros.texto);
+export function listarPublicaciones(filtros: FiltrosCatalogo): Promise<Publicacion[]> {
+  const parametros = new URLSearchParams();
+  const texto = filtros.texto.trim();
+  if (texto) parametros.set('texto', texto);
+  if (filtros.consola) parametros.set('consola', filtros.consola);
+  if (filtros.genero) parametros.set('genero', filtros.genero);
+  if (filtros.estadoConservacion) parametros.set('estadoConservacion', filtros.estadoConservacion);
+  if (filtros.comuna) parametros.set('comuna', filtros.comuna);
+  if (filtros.precioMaximo < PRECIO_MAXIMO) parametros.set('precioMaximo', String(filtros.precioMaximo));
 
-  return PUBLICACIONES.filter((publicacion) => {
-    if (publicacion.estadoPublicacion === 'vendida') {
-      return false;
-    }
-    if (
-      texto &&
-      !normalizar(`${publicacion.titulo} ${publicacion.consola} ${publicacion.genero}`).includes(texto)
-    ) {
-      return false;
-    }
-    if (filtros.consola && publicacion.consola !== filtros.consola) {
-      return false;
-    }
-    if (filtros.genero && publicacion.genero !== filtros.genero) {
-      return false;
-    }
-    if (filtros.estadoConservacion && publicacion.estadoConservacion !== filtros.estadoConservacion) {
-      return false;
-    }
-    if (filtros.comuna && publicacion.comuna !== filtros.comuna) {
-      return false;
-    }
-    return publicacion.precio <= filtros.precioMaximo;
-  }).sort((a, b) => b.fechaPublicacion.localeCompare(a.fechaPublicacion));
+  const consulta = parametros.toString();
+  return solicitar<Publicacion[]>(`/publicaciones${consulta ? `?${consulta}` : ''}`);
 }
 
-export async function obtenerPublicacion(id: string): Promise<Publicacion | undefined> {
-  await demora();
-  return PUBLICACIONES.find((publicacion) => publicacion.id === id);
+/** Detalle de una publicación; undefined si no existe o fue retirada del catálogo. */
+export async function obtenerPublicacion(id: string | number): Promise<Publicacion | undefined> {
+  try {
+    return await solicitar<Publicacion>(`/publicaciones/${encodeURIComponent(id)}`);
+  } catch (error) {
+    if (error instanceof ErrorApi && (error.estado === 404 || error.estado === 400)) {
+      return undefined;
+    }
+    throw error;
+  }
+}
+
+/** Publicaciones propias en cualquier estado (RF-04). */
+export function listarMisPublicaciones(): Promise<Publicacion[]> {
+  return solicitar<Publicacion[]>('/publicaciones/mias');
+}
+
+export function crearPublicacion(datos: DatosPublicacion): Promise<Publicacion> {
+  return solicitar<Publicacion>('/publicaciones', 'POST', datos);
+}
+
+export function actualizarPublicacion(id: number, datos: DatosPublicacion): Promise<Publicacion> {
+  return solicitar<Publicacion>(`/publicaciones/${id}`, 'PUT', datos);
+}
+
+/** Pausar o reactivar una publicación propia. */
+export function cambiarEstadoPublicacion(
+  id: number,
+  estadoPublicacion: Exclude<EstadoPublicacion, 'vendida'>,
+): Promise<Publicacion> {
+  return solicitar<Publicacion>(`/publicaciones/${id}/estado`, 'PATCH', { estadoPublicacion });
+}
+
+export function eliminarPublicacion(id: number): Promise<void> {
+  return solicitar<void>(`/publicaciones/${id}`, 'DELETE');
 }
 
 /** Indica si la publicación admite iniciar una solicitud de compra (RF-06). */
@@ -82,4 +85,16 @@ export function contarFiltrosActivos(filtros: FiltrosCatalogo): number {
   if (filtros.comuna) total += 1;
   if (filtros.precioMaximo < PRECIO_MAXIMO) total += 1;
   return total;
+}
+
+/** Color del badge según el estado de la publicación. */
+export function colorEstadoPublicacion(estado: EstadoPublicacion): string {
+  switch (estado) {
+    case 'activa':
+      return 'success';
+    case 'pausada':
+      return 'warning';
+    default:
+      return 'medium';
+  }
 }

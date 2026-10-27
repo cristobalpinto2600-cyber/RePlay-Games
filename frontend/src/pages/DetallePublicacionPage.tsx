@@ -26,6 +26,7 @@ import {
 import {
   alertCircleOutline,
   calendarOutline,
+  cloudOfflineOutline,
   cubeOutline,
   flagOutline,
   heartOutline,
@@ -42,6 +43,8 @@ import PortadaJuego from '../components/PortadaJuego';
 import { useSesion } from '../context/SesionContext';
 import type { ModalidadEntrega, Publicacion, Usuario } from '../models';
 import { RUTAS, rutaLoginCon } from '../routes/rutas';
+import { mensajeDeError } from '../services/api';
+import { crearOperacion } from '../services/operacionesService';
 import { estaDisponible, obtenerPublicacion } from '../services/publicacionesService';
 import { obtenerUsuario } from '../services/usuariosService';
 import { formatearFecha, formatearPrecio } from '../utils/formato';
@@ -55,28 +58,42 @@ const DetallePublicacionPage: React.FC = () => {
   const [publicacion, setPublicacion] = useState<Publicacion | null>(null);
   const [vendedor, setVendedor] = useState<Usuario | undefined>(undefined);
   const [cargando, setCargando] = useState(true);
+  const [errorCarga, setErrorCarga] = useState('');
   const [modalCompra, setModalCompra] = useState(false);
+  const [enviandoSolicitud, setEnviandoSolicitud] = useState(false);
   const [aviso, setAviso] = useState<string>('');
   const [confirmacion, setConfirmacion] = useState<string>('');
 
   useEffect(() => {
     let vigente = true;
     setCargando(true);
+    setErrorCarga('');
 
-    obtenerPublicacion(id).then(async (encontrada) => {
-      if (!vigente) {
-        return;
-      }
-      setPublicacion(encontrada ?? null);
-
-      if (encontrada) {
-        const datosVendedor = await obtenerUsuario(encontrada.vendedorId);
-        if (vigente) {
-          setVendedor(datosVendedor);
+    obtenerPublicacion(id)
+      .then(async (encontrada) => {
+        if (!vigente) {
+          return;
         }
-      }
-      setCargando(false);
-    });
+        setPublicacion(encontrada ?? null);
+
+        if (encontrada) {
+          const datosVendedor = await obtenerUsuario(encontrada.vendedorId);
+          if (vigente) {
+            setVendedor(datosVendedor);
+          }
+        }
+      })
+      .catch((causa) => {
+        if (vigente) {
+          setPublicacion(null);
+          setErrorCarga(mensajeDeError(causa));
+        }
+      })
+      .finally(() => {
+        if (vigente) {
+          setCargando(false);
+        }
+      });
 
     return () => {
       vigente = false;
@@ -92,11 +109,23 @@ const DetallePublicacionPage: React.FC = () => {
     setModalCompra(true);
   };
 
-  const confirmarSolicitud = (modalidad: ModalidadEntrega) => {
+  /** Crea la operación en el backend; queda pendiente hasta que el vendedor la confirme (RF-06). */
+  const confirmarSolicitud = async (modalidad: ModalidadEntrega) => {
+    if (!publicacion) {
+      return;
+    }
     setModalCompra(false);
-    setConfirmacion(
-      `Solicitud registrada con entrega "${modalidad}". Queda como operación pendiente de confirmación del vendedor.`,
-    );
+    setEnviandoSolicitud(true);
+    try {
+      await crearOperacion(publicacion.id, modalidad);
+      setConfirmacion(
+        `Solicitud registrada con entrega "${modalidad}". Queda como operación pendiente de confirmación del vendedor.`,
+      );
+    } catch (error) {
+      setAviso(mensajeDeError(error, 'No fue posible registrar la solicitud.'));
+    } finally {
+      setEnviandoSolicitud(false);
+    }
   };
 
   if (cargando) {
@@ -121,9 +150,9 @@ const DetallePublicacionPage: React.FC = () => {
         <EncabezadoPagina titulo="Publicación" conVolver />
         <IonContent>
           <MensajeVacio
-            icono={alertCircleOutline}
-            titulo="Publicación no disponible"
-            descripcion="La publicación que buscas no existe o fue retirada del catálogo."
+            icono={errorCarga ? cloudOfflineOutline : alertCircleOutline}
+            titulo={errorCarga ? 'No pudimos cargar la publicación' : 'Publicación no disponible'}
+            descripcion={errorCarga || 'La publicación que buscas no existe o fue retirada del catálogo.'}
           >
             <IonButton routerLink={RUTAS.catalogo} routerDirection="root">
               Volver al catálogo
@@ -136,6 +165,8 @@ const DetallePublicacionPage: React.FC = () => {
 
   const disponible = estaDisponible(publicacion);
   const esPropia = usuario?.id === publicacion.vendedorId;
+  // Según la matriz de acceso, la cuenta administradora modera pero no compra.
+  const esAdministrador = usuario?.rol === 'administrador';
 
   return (
     <IonPage>
@@ -228,10 +259,10 @@ const DetallePublicacionPage: React.FC = () => {
           <div className="detalle__acciones">
             <IonButton
               expand="block"
-              disabled={!disponible || esPropia}
+              disabled={!disponible || esPropia || esAdministrador || enviandoSolicitud}
               onClick={iniciarSolicitud}
             >
-              Comprar
+              {enviandoSolicitud ? <IonSpinner name="crescent" /> : 'Comprar'}
             </IonButton>
             <IonButton
               expand="block"
@@ -266,6 +297,12 @@ const DetallePublicacionPage: React.FC = () => {
               <p className="nota">Esta es una de tus publicaciones, por eso no puedes comprarla.</p>
             </IonText>
           )}
+
+          {esAdministrador && (
+            <IonText color="medium" className="detalle__aviso">
+              <p className="nota">La cuenta de administración no realiza compras.</p>
+            </IonText>
+          )}
         </div>
 
         <ModalSolicitudCompra
@@ -273,7 +310,7 @@ const DetallePublicacionPage: React.FC = () => {
           vendedor={vendedor}
           abierto={modalCompra}
           onCerrar={() => setModalCompra(false)}
-          onConfirmar={confirmarSolicitud}
+          onConfirmar={(modalidad) => void confirmarSolicitud(modalidad)}
         />
 
         <IonToast

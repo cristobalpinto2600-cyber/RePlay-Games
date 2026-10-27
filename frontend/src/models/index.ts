@@ -1,7 +1,7 @@
 /**
- * Modelos del dominio de RePlay Games (EP1).
- * Estas interfaces describen la información que en EP2 entregará la API REST,
- * por lo que las páginas y los componentes solo dependen de estos tipos.
+ * Modelos del dominio de RePlay Games.
+ * Estas interfaces describen la información que entrega la API REST del backend (EP2), por lo que
+ * las páginas y los componentes solo dependen de estos tipos.
  */
 
 /** Roles del sistema (documento, sección 2.4). */
@@ -25,9 +25,10 @@ export type ModalidadEntrega = 'Retiro en persona' | 'Punto de encuentro' | 'Env
 export type EstadoOperacion = 'pendiente' | 'confirmada' | 'completada' | 'cancelada';
 
 export interface Usuario {
-  id: string;
+  id: number;
   nombreUsuario: string;
-  correo: string;
+  /** Solo se recibe en la propia cuenta y en la vista administrativa, nunca en el perfil público. */
+  correo?: string;
   rol: Rol;
   region?: string;
   comuna?: string;
@@ -35,10 +36,12 @@ export interface Usuario {
   reputacion: number;
   totalCalificaciones: number;
   fechaRegistro: string;
+  /** Estado de la cuenta; una cuenta desactivada por la administración no puede iniciar sesión. */
+  activo?: boolean;
 }
 
 export interface Publicacion {
-  id: string;
+  id: number;
   titulo: string;
   consola: string;
   genero: string;
@@ -52,15 +55,33 @@ export interface Publicacion {
   entregas: ModalidadEntrega[];
   incluyeCaja: boolean;
   incluyeManual: boolean;
-  vendedorId: string;
+  vendedorId: number;
   fechaPublicacion: string;
+  /** Oculta por moderación del administrador (RF-10). */
+  oculta?: boolean;
 }
 
+/** Datos que se envían al crear o editar una publicación (RF-03, RF-04). */
+export type DatosPublicacion = Pick<
+  Publicacion,
+  | 'titulo'
+  | 'consola'
+  | 'genero'
+  | 'precio'
+  | 'estadoConservacion'
+  | 'descripcion'
+  | 'region'
+  | 'comuna'
+  | 'entregas'
+  | 'incluyeCaja'
+  | 'incluyeManual'
+>;
+
 export interface Operacion {
-  id: string;
-  publicacionId: string;
-  compradorId: string;
-  vendedorId: string;
+  id: number;
+  publicacionId: number;
+  compradorId: number;
+  vendedorId: number;
   estado: EstadoOperacion;
   modalidadEntrega: ModalidadEntrega;
   fechaCreacion: string;

@@ -19,15 +19,17 @@ import {
   IonRow,
   IonSearchbar,
   IonSkeletonText,
+  useIonViewWillEnter,
 } from '@ionic/react';
-import { closeCircle, filterOutline, searchOutline } from 'ionicons/icons';
-import React, { useEffect, useState } from 'react';
+import { closeCircle, cloudOfflineOutline, filterOutline, searchOutline } from 'ionicons/icons';
+import React, { useEffect, useRef, useState } from 'react';
 import EncabezadoPagina from '../components/EncabezadoPagina';
 import MensajeVacio from '../components/MensajeVacio';
 import PanelFiltros from '../components/PanelFiltros';
 import TarjetaPublicacion from '../components/TarjetaPublicacion';
 import { PRECIO_MAXIMO } from '../data/catalogos';
 import type { FiltrosCatalogo, Publicacion } from '../models';
+import { mensajeDeError } from '../services/api';
 import {
   FILTROS_INICIALES,
   contarFiltrosActivos,
@@ -40,23 +42,47 @@ const CatalogoPage: React.FC = () => {
   const [publicaciones, setPublicaciones] = useState<Publicacion[]>([]);
   const [cargando, setCargando] = useState(true);
   const [filtrosAbiertos, setFiltrosAbiertos] = useState(false);
+  const [error, setError] = useState('');
+  const [recarga, setRecarga] = useState(0);
+  const primeraVisita = useRef(true);
 
-  // Cada cambio de filtro vuelve a consultar el servicio, igual que ocurrirá con la API en EP2.
+  // Al volver al catálogo se consulta otra vez, para incluir publicaciones recién creadas.
+  useIonViewWillEnter(() => {
+    if (primeraVisita.current) {
+      primeraVisita.current = false;
+      return;
+    }
+    setRecarga((valor) => valor + 1);
+  });
+
+  // Cada cambio de filtro vuelve a consultar la API.
   useEffect(() => {
     let vigente = true;
     setCargando(true);
+    setError('');
 
-    listarPublicaciones(filtros).then((resultado) => {
-      if (vigente) {
-        setPublicaciones(resultado);
-        setCargando(false);
-      }
-    });
+    listarPublicaciones(filtros)
+      .then((resultado) => {
+        if (vigente) {
+          setPublicaciones(resultado);
+        }
+      })
+      .catch((causa) => {
+        if (vigente) {
+          setPublicaciones([]);
+          setError(mensajeDeError(causa));
+        }
+      })
+      .finally(() => {
+        if (vigente) {
+          setCargando(false);
+        }
+      });
 
     return () => {
       vigente = false;
     };
-  }, [filtros]);
+  }, [filtros, recarga]);
 
   const limpiarFiltros = () => setFiltros(FILTROS_INICIALES);
   const filtrosActivos = contarFiltrosActivos(filtros);
@@ -93,6 +119,8 @@ const CatalogoPage: React.FC = () => {
               <span className="catalogo__resumen">
                 {cargando
                   ? 'Buscando publicaciones…'
+                  : error
+                  ? 'Sin conexión con el servidor'
                   : `${publicaciones.length} ${
                       publicaciones.length === 1 ? 'publicación encontrada' : 'publicaciones encontradas'
                     }`}
@@ -154,6 +182,12 @@ const CatalogoPage: React.FC = () => {
                   ))}
                 </IonRow>
               </IonGrid>
+            ) : error ? (
+              <MensajeVacio icono={cloudOfflineOutline} titulo="No pudimos cargar el catálogo" descripcion={error}>
+                <IonButton fill="outline" onClick={() => setRecarga((valor) => valor + 1)}>
+                  Reintentar
+                </IonButton>
+              </MensajeVacio>
             ) : publicaciones.length === 0 ? (
               <MensajeVacio
                 icono={searchOutline}

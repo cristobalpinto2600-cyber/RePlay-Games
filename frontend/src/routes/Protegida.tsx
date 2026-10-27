@@ -10,7 +10,7 @@
  * espera una página en cada transición.
  */
 import { IonContent, IonPage, IonSpinner, IonText } from '@ionic/react';
-import React from 'react';
+import React, { useState } from 'react';
 import { Redirect, useLocation } from 'react-router-dom';
 import { useSesion } from '../context/SesionContext';
 import type { Rol } from '../models';
@@ -44,6 +44,10 @@ interface PropsProtegida {
 const Protegida: React.FC<PropsProtegida> = ({ rol, children }) => {
   const { usuario, cargando } = useSesion();
   const ubicacion = useLocation();
+  // Ionic mantiene montada la página anterior después de navegar: si el destino se calculara con
+  // la ubicación actual, al llegar a /login se volvería a redirigir en bucle. Por eso se guarda
+  // la ruta solicitada la primera vez.
+  const [solicitada] = useState(() => `${ubicacion.pathname}${ubicacion.search}`);
 
   if (cargando) {
     return <PantallaTransicion mensaje="Verificando tu sesión…" />;
@@ -52,7 +56,7 @@ const Protegida: React.FC<PropsProtegida> = ({ rol, children }) => {
   if (!usuario) {
     return (
       <PantallaTransicion mensaje="Necesitas iniciar sesión. Te llevamos al acceso…">
-        <Redirect to={rutaLoginCon(`${ubicacion.pathname}${ubicacion.search}`)} />
+        <Redirect to={rutaLoginCon(solicitada)} />
       </PantallaTransicion>
     );
   }

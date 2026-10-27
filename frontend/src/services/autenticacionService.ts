@@ -1,63 +1,71 @@
 /**
- * Servicio de autenticación simulado (FT-01, FT-02, FT-03).
- * En EP2 estas funciones pasan a llamar a la API REST con JWT; la firma se mantiene igual
- * para no modificar las páginas que ya las usan.
+ * Autenticación contra la API REST con JWT (FT-01, FT-02, FT-03).
+ * Las firmas son las mismas de EP1, por lo que las páginas que las usan no cambian.
  */
-import { CLAVE_DEMO, USUARIOS } from '../data/usuarios';
 import type { Credenciales, DatosRegistro, Usuario } from '../models';
-import { demora } from '../utils/demora';
 import { borrar, escribir, leer } from './almacenamiento';
+import { CLAVE_SESION, ErrorApi, type SesionGuardada, solicitar } from './api';
 
-const CLAVE_SESION = 'replay.sesion';
+interface RespuestaSesion {
+  token: string;
+  expiraEn: string;
+  usuario: Usuario;
+}
 
-/** Valida las credenciales contra las cuentas de ejemplo y deja la sesión iniciada. */
+function guardarSesion(token: string, usuario: Usuario): void {
+  escribir(CLAVE_SESION, { token, usuario } satisfies SesionGuardada);
+}
+
+/** Envía las credenciales; si son válidas guarda el token y deja la sesión iniciada. */
 export async function iniciarSesion({ correo, clave }: Credenciales): Promise<Usuario> {
-  await demora();
-  const usuario = USUARIOS.find(
-    (candidato) => candidato.correo.toLowerCase() === correo.trim().toLowerCase(),
-  );
-  if (!usuario || clave !== CLAVE_DEMO) {
-    throw new Error('El correo o la contraseña no son correctos.');
-  }
-  guardarSesion(usuario);
+  const { token, usuario } = await solicitar<RespuestaSesion>('/auth/login', 'POST', {
+    correo: correo.trim(),
+    clave,
+  });
+  guardarSesion(token, usuario);
   return usuario;
+}
+
+/** Crea la cuenta en el backend e inicia sesión con ella. */
+export async function registrar(datos: DatosRegistro): Promise<Usuario> {
+  const { token, usuario } = await solicitar<RespuestaSesion>('/auth/registro', 'POST', {
+    ...datos,
+    nombreUsuario: datos.nombreUsuario.trim(),
+    correo: datos.correo.trim(),
+  });
+  guardarSesion(token, usuario);
+  return usuario;
+}
+
+/** Usuario guardado localmente, disponible de inmediato al abrir la aplicación. */
+export function leerSesion(): Usuario | null {
+  const guardada = leer<SesionGuardada>(CLAVE_SESION);
+  return guardada?.token ? guardada.usuario : null;
 }
 
 /**
- * Crea una cuenta de demostración. Los datos mock son estáticos en EP1, por lo que el usuario
- * creado vive solo en la sesión actual y no se agrega al listado de usuarios.
+ * Confirma con el backend que el token guardado sigue vigente y actualiza los datos del usuario.
+ * Si la API no responde se conserva la sesión local para no expulsar a la persona sin motivo.
  */
-export async function registrar(datos: DatosRegistro): Promise<Usuario> {
-  await demora();
-  const correo = datos.correo.trim().toLowerCase();
-  const yaExiste = USUARIOS.some((usuario) => usuario.correo.toLowerCase() === correo);
-  if (yaExiste) {
-    throw new Error('Ya existe una cuenta registrada con ese correo.');
+export async function verificarSesion(): Promise<Usuario | null> {
+  const guardada = leer<SesionGuardada>(CLAVE_SESION);
+  if (!guardada?.token) {
+    borrar(CLAVE_SESION);
+    return null;
   }
-
-  const usuario: Usuario = {
-    id: `u-${Date.now()}`,
-    nombreUsuario: datos.nombreUsuario.trim(),
-    correo,
-    rol: 'usuario',
-    region: datos.region,
-    comuna: datos.comuna,
-    reputacion: 0,
-    totalCalificaciones: 0,
-    fechaRegistro: new Date().toISOString().slice(0, 10),
-  };
-  guardarSesion(usuario);
-  return usuario;
+  try {
+    const usuario = await solicitar<Usuario>('/auth/perfil');
+    guardarSesion(guardada.token, usuario);
+    return usuario;
+  } catch (error) {
+    if (error instanceof ErrorApi && error.estado === 401) {
+      return null;
+    }
+    return guardada.usuario;
+  }
 }
 
-export function leerSesion(): Usuario | null {
-  return leer<Usuario>(CLAVE_SESION);
-}
-
-export function guardarSesion(usuario: Usuario): void {
-  escribir(CLAVE_SESION, usuario);
-}
-
+/** Los JWT no guardan estado en el servidor: cerrar sesión es descartar el token. */
 export function cerrarSesion(): void {
   borrar(CLAVE_SESION);
 }

@@ -27,6 +27,7 @@ import EncabezadoPagina from '../components/EncabezadoPagina';
 import { REGIONES } from '../data/catalogos';
 import { useSesion } from '../context/SesionContext';
 import { RUTAS } from '../routes/rutas';
+import { erroresPorCampo, mensajeDeError } from '../services/api';
 import { correoValido } from '../utils/formato';
 
 interface ErroresRegistro {
@@ -106,7 +107,9 @@ const RegistroPage: React.FC = () => {
       });
       setCreada(true);
     } catch (error) {
-      setErrorGeneral(error instanceof Error ? error.message : 'No fue posible crear la cuenta.');
+      // Errores de la API por campo (por ejemplo, correo ya registrado) junto al control afectado.
+      setErrores((actuales) => ({ ...actuales, ...erroresPorCampo(error) }));
+      setErrorGeneral(mensajeDeError(error, 'No fue posible crear la cuenta.'));
     } finally {
       setEnviando(false);
     }

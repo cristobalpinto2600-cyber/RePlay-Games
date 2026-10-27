@@ -1,0 +1,444 @@
+/**
+ * Estilos propios de RePlay Games.
+ * Solo se define lo que Ionic no resuelve: la grilla del catálogo, la portada generada
+ * y pequeños ajustes de lectura. Todo usa variables de Ionic para funcionar en modo claro y oscuro.
+ */
+
+/* ---------- Estructura general ---------- */
+
+/* Contenedor del área principal dentro del IonSplitPane. */
+.contenido-principal {
+  position: relative;
+  flex: 1 1 0;
+  min-width: 0;
+  height: 100%;
+}
+
+/* Limita el ancho de lectura en pantallas grandes (RNF-UX-01). */
+.contenedor {
+  width: 100%;
+  max-width: var(--replay-ancho-maximo);
+  margin: 0 auto;
+  padding: 16px;
+}
+
+.titulo-seccion {
+  margin: 20px 0 8px;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.nota {
+  font-size: 0.85rem;
+  line-height: 1.5;
+}
+
+.precio {
+  margin: 4px 0;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--ion-color-primary);
+}
+
+.pantalla-transicion {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 60vh;
+  text-align: center;
+}
+
+/* ---------- Menú lateral ---------- */
+
+.menu__sesion {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 18px 16px;
+  border-bottom: 1px solid var(--replay-borde);
+}
+
+.menu__avatar {
+  font-size: 44px;
+  color: var(--ion-color-primary);
+}
+
+.menu__sesion strong {
+  display: block;
+}
+
+.menu__cuenta {
+  margin-top: 8px;
+  border-top: 1px solid var(--replay-borde);
+}
+
+.item-activo {
+  --background: rgba(var(--ion-color-primary-rgb), 0.12);
+  --color: var(--ion-color-primary);
+  font-weight: 600;
+}
+
+/* ---------- Portada generada ---------- */
+
+.portada {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  color: #ffffff;
+  text-align: center;
+  overflow: hidden;
+}
+
+.portada--tarjeta {
+  aspect-ratio: 4 / 3;
+  width: 100%;
+}
+
+.portada--detalle {
+  aspect-ratio: 16 / 9;
+  width: 100%;
+  border-radius: var(--replay-radio);
+}
+
+.portada--miniatura {
+  width: 72px;
+  height: 72px;
+  flex: 0 0 72px;
+  border-radius: 12px;
+}
+
+.portada__iniciales {
+  font-size: 2rem;
+  font-weight: 800;
+  letter-spacing: 1px;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+}
+
+.portada--detalle .portada__iniciales {
+  font-size: 3.2rem;
+}
+
+.portada--miniatura .portada__iniciales {
+  font-size: 1.4rem;
+}
+
+.portada__consola {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  opacity: 0.9;
+}
+
+/* ---------- Tarjeta del catálogo ---------- */
+
+.tarjeta {
+  margin: 0 0 4px;
+  border-radius: var(--replay-radio);
+  box-shadow: var(--replay-sombra);
+  height: 100%;
+}
+
+.tarjeta__portada {
+  position: relative;
+}
+
+.tarjeta__estado {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+}
+
+.tarjeta__cuerpo {
+  padding: 12px 14px 16px;
+}
+
+.tarjeta__titulo {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1.3;
+  color: var(--ion-text-color);
+}
+
+.tarjeta__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin: 8px 0 4px;
+}
+
+.tarjeta__chips ion-chip {
+  margin: 0;
+  font-size: 0.72rem;
+  height: 24px;
+}
+
+.tarjeta__ubicacion {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin: 4px 0 0;
+  font-size: 0.82rem;
+  color: var(--ion-color-medium);
+}
+
+/* ---------- Catálogo ---------- */
+
+.catalogo {
+  display: flex;
+  align-items: flex-start;
+  gap: 20px;
+  width: 100%;
+  max-width: var(--replay-ancho-maximo);
+  margin: 0 auto;
+  padding: 12px 16px 24px;
+}
+
+/* Columna de filtros: visible solo en escritorio (documento, sección 5.1). */
+.catalogo__filtros {
+  flex: 0 0 272px;
+  width: 272px;
+  position: sticky;
+  top: 12px;
+  border: 1px solid var(--replay-borde);
+  border-radius: var(--replay-radio);
+  overflow: hidden;
+  background: var(--ion-card-background, var(--replay-superficie));
+}
+
+.catalogo__resultados {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.catalogo__barra {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 4px;
+}
+
+.catalogo__resumen {
+  font-size: 0.9rem;
+  color: var(--ion-color-medium);
+}
+
+.catalogo__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.panel-filtros__acciones {
+  padding: 8px 12px 16px;
+}
+
+.panel-filtros__precio {
+  font-weight: 600;
+}
+
+/* ---------- Estados vacíos ---------- */
+
+.mensaje-vacio {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 48px 24px;
+  text-align: center;
+}
+
+.mensaje-vacio__icono {
+  font-size: 56px;
+  color: var(--ion-color-medium);
+}
+
+.mensaje-vacio h3 {
+  margin: 8px 0 0;
+}
+
+/* ---------- Detalle de publicación ---------- */
+
+.detalle {
+  width: 100%;
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 16px;
+}
+
+.detalle__encabezado h1 {
+  margin: 16px 0 4px;
+  font-size: 1.5rem;
+  line-height: 1.25;
+}
+
+.detalle__precio {
+  font-size: 1.8rem;
+  font-weight: 800;
+  color: var(--ion-color-primary);
+  margin: 0 0 8px;
+}
+
+.detalle__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.detalle__acciones {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin: 16px 0 8px;
+}
+
+.detalle__acciones ion-button {
+  flex: 1 1 180px;
+}
+
+.detalle__aviso {
+  margin-top: 8px;
+}
+
+/* ---------- Resumen de compra ---------- */
+
+.resumen-compra {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  padding: 12px;
+  border: 1px solid var(--replay-borde);
+  border-radius: var(--replay-radio);
+}
+
+.resumen-compra h3 {
+  margin: 0 0 2px;
+  font-size: 1rem;
+}
+
+/* ---------- Formularios ---------- */
+
+.formulario {
+  width: 100%;
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 16px;
+}
+
+.formulario__ayuda {
+  font-size: 0.85rem;
+  line-height: 1.5;
+  margin-bottom: 4px;
+}
+
+.formulario__acciones {
+  margin-top: 20px;
+}
+
+.formulario__fotos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 8px 0 4px;
+}
+
+.foto-simulada {
+  position: relative;
+  width: 84px;
+  height: 84px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px dashed var(--replay-borde);
+  background: rgba(var(--ion-color-primary-rgb), 0.08);
+  color: var(--ion-color-primary);
+  font-size: 28px;
+}
+
+/* Tarjeta de acceso usada en login y registro */
+.acceso {
+  width: 100%;
+  max-width: 440px;
+  margin: 0 auto;
+  padding: 24px 16px 32px;
+}
+
+.acceso__marca {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.acceso__marca h1 {
+  margin: 8px 0 2px;
+  font-size: 1.6rem;
+}
+
+.acceso__marca ion-icon {
+  font-size: 48px;
+  color: var(--ion-color-primary);
+}
+
+.acceso__pie {
+  margin-top: 18px;
+  text-align: center;
+  font-size: 0.9rem;
+}
+
+/* ---------- Operaciones ---------- */
+
+.operaciones {
+  width: 100%;
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 8px 16px 24px;
+}
+
+.operacion {
+  display: flex;
+  gap: 14px;
+  padding: 14px;
+  border: 1px solid var(--replay-borde);
+  border-radius: var(--replay-radio);
+  margin-bottom: 12px;
+  background: var(--ion-card-background, var(--replay-superficie));
+}
+
+.operacion__datos {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.operacion__titulo {
+  margin: 0 0 4px;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.operacion__meta {
+  margin: 2px 0;
+  font-size: 0.85rem;
+  color: var(--ion-color-medium);
+}
+
+.operacion__acciones {
+  margin-top: 8px;
+}
+
+/* Iguala la altura de las tarjetas dentro de una misma fila de la grilla. */
+.catalogo__resultados ion-col {
+  display: flex;
+}
+
+.catalogo__resultados .tarjeta {
+  width: 100%;
+}

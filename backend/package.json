@@ -1,0 +1,29 @@
+{
+  "name": "replay-games-backend",
+  "version": "1.0.0",
+  "private": true,
+  "description": "RePlay Games - API REST con Express, MySQL y JWT (EP2)",
+  "main": "src/server.js",
+  "engines": {
+    "node": ">=20.12"
+  },
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js",
+    "test:api": "newman run ../postman/RePlay-Games.postman_collection.json -e ../postman/RePlay-Games.postman_environment.json -r cli,json --reporter-json-export ../postman/resultados/newman.json && node ../postman/generar-reporte.js"
+  },
+  "dependencies": {
+    "bcryptjs": "^3.0.3",
+    "cors": "^2.8.6",
+    "express": "^5.2.1",
+    "express-rate-limit": "^8.7.0",
+    "express-validator": "^7.3.2",
+    "helmet": "^8.3.0",
+    "jsonwebtoken": "^9.0.3",
+    "morgan": "^1.12.1",
+    "mysql2": "^3.24.5"
+  },
+  "devDependencies": {
+    "newman": "^6.2.2"
+  }
+}

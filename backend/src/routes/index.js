@@ -3,8 +3,12 @@ const { Router } = require('express');
 const { pool } = require('../config/db');
 const catalogos = require('../controllers/catalogosController');
 const authRoutes = require('./authRoutes');
+const calificacionesRoutes = require('./calificacionesRoutes');
+const favoritosRoutes = require('./favoritosRoutes');
+const notificacionesRoutes = require('./notificacionesRoutes');
 const operacionesRoutes = require('./operacionesRoutes');
 const publicacionesRoutes = require('./publicacionesRoutes');
+const reportesRoutes = require('./reportesRoutes');
 const usuariosRoutes = require('./usuariosRoutes');
 
 const router = Router();
@@ -20,5 +24,9 @@ router.use('/auth', authRoutes);
 router.use('/usuarios', usuariosRoutes);
 router.use('/publicaciones', publicacionesRoutes);
 router.use('/operaciones', operacionesRoutes);
+router.use('/favoritos', favoritosRoutes);
+router.use('/calificaciones', calificacionesRoutes);
+router.use('/reportes', reportesRoutes);
+router.use('/notificaciones', notificacionesRoutes);
 
 module.exports = router;

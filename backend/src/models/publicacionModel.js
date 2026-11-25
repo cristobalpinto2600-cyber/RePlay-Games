@@ -229,6 +229,35 @@ async function buscarPorIds(ids) {
   return filas.map(aPublicacion);
 }
 
+/** Todas las publicaciones para moderación administrativa (RF-10), priorizando reportadas. */
+async function listarParaAdmin() {
+  const [filas] = await pool.execute(
+    `SELECT p.id, p.titulo, co.nombre AS consola, g.nombre AS genero, p.precio,
+            p.estado_conservacion, p.estado_publicacion, p.oculta, p.descripcion,
+            p.imagen_url, r.nombre AS region, c.nombre AS comuna, p.incluye_caja,
+            p.incluye_manual, p.vendedor_id, p.creado_en,
+            u.nombre_usuario AS vendedor_nombre_admin,
+            COUNT(DISTINCT rep.id) AS reportes_pendientes,
+            GROUP_CONCAT(DISTINCT m.nombre ORDER BY m.id SEPARATOR '|') AS entregas
+       FROM publicaciones p
+       JOIN consolas co ON co.id = p.consola_id
+       JOIN generos g ON g.id = p.genero_id
+       JOIN comunas c ON c.id = p.comuna_id
+       JOIN regiones r ON r.id = c.region_id
+       JOIN usuarios u ON u.id = p.vendedor_id
+       LEFT JOIN publicacion_entregas pe ON pe.publicacion_id = p.id
+       LEFT JOIN modalidades_entrega m ON m.id = pe.modalidad_id
+       LEFT JOIN reportes rep ON rep.publicacion_id = p.id AND rep.estado = 'pendiente'
+      GROUP BY p.id, co.id, g.id, c.id, r.id, u.id
+      ORDER BY reportes_pendientes DESC, p.creado_en DESC, p.id DESC`,
+  );
+  return filas.map((fila) => ({
+    ...aPublicacion(fila),
+    vendedorNombre: fila.vendedor_nombre_admin,
+    reportesPendientes: Number(fila.reportes_pendientes),
+  }));
+}
+
 /** Publicaciones propias en cualquier estado (RF-04). */
 async function listarPorVendedor(vendedorId) {
   const [filas] = await pool.execute(
@@ -317,6 +346,7 @@ module.exports = {
   buscarPorId,
   buscarPorIds,
   listarPorVendedor,
+  listarParaAdmin,
   crear,
   actualizar,
   cambiarEstado,

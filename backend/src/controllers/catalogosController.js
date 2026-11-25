@@ -2,6 +2,7 @@
 const catalogoModel = require('../models/catalogoModel');
 
 async function listar(req, res) {
+  res.set('Cache-Control', 'public, max-age=300');
   res.json(await catalogoModel.listar());
 }
 

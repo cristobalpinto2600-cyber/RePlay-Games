@@ -22,22 +22,33 @@ const TRANSICIONES = {
 };
 
 /**
- * Completa cada operación con su publicación y la contraparte, en el formato que usa la vista
- * "Compras y ventas" del frontend (OperacionDetallada).
+ * Completa cada operación con su publicación y la contraparte usando índices Map en O(1) (EF4).
  */
 async function detallar(operaciones, usuarioId) {
-  const publicaciones = await publicacionModel.buscarPorIds([...new Set(operaciones.map((o) => o.publicacionId))]);
-  const contrapartes = await usuarioModel.buscarPublicosPorIds([
+  if (operaciones.length === 0) {
+    return [];
+  }
+
+  const publicacionIds = [...new Set(operaciones.map((o) => o.publicacionId))];
+  const contraparteIds = [
     ...new Set(operaciones.map((o) => (o.compradorId === usuarioId ? o.vendedorId : o.compradorId))),
+  ];
+
+  const [publicaciones, contrapartes] = await Promise.all([
+    publicacionModel.buscarPorIds(publicacionIds),
+    usuarioModel.buscarPublicosPorIds(contraparteIds),
   ]);
+
+  const mapaPublicaciones = new Map(publicaciones.map((p) => [p.id, p]));
+  const mapaContrapartes = new Map(contrapartes.map((u) => [u.id, u]));
 
   return operaciones.map((operacion) => {
     const esComprador = operacion.compradorId === usuarioId;
     const contraparteId = esComprador ? operacion.vendedorId : operacion.compradorId;
     return {
       operacion,
-      publicacion: publicaciones.find((p) => p.id === operacion.publicacionId),
-      contraparte: contrapartes.find((u) => u.id === contraparteId),
+      publicacion: mapaPublicaciones.get(operacion.publicacionId),
+      contraparte: mapaContrapartes.get(contraparteId),
       rolUsuario: esComprador ? 'comprador' : 'vendedor',
     };
   });

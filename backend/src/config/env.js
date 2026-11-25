@@ -41,4 +41,5 @@ module.exports = {
     .map((origen) => origen.trim())
     .filter(Boolean),
   maxIntentosAutenticacion: Number(process.env.AUTH_MAX_INTENTOS) || 20,
+  maxPeticionesApi: Number(process.env.API_MAX_PETICIONES) || 200,
 };

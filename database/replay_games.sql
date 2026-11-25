@@ -1,5 +1,5 @@
 -- =============================================================================
--- RePlay Games — Base de datos relacional (EP2)
+-- RePlay Games — Base de datos relacional (Entrega Final: EF1, EF3, EF4)
 --
 -- Compatible con MySQL 8.0+ y MariaDB 10.4+ (incluida la versión de XAMPP).
 -- El script es reproducible: elimina y vuelve a crear la base completa con sus
@@ -96,7 +96,8 @@ CREATE TABLE usuarios (
 ) ENGINE=InnoDB;
 
 -- -----------------------------------------------------------------------------
--- Publicaciones (RF-01 a RF-04). "oculta" la usa la moderación del administrador.
+-- Publicaciones (RF-01 a RF-04, EF4). Incluye índices compuestos y FULLTEXT
+-- para optimizar búsquedas y filtros combinados del catálogo.
 -- -----------------------------------------------------------------------------
 CREATE TABLE publicaciones (
   id INT UNSIGNED NOT NULL AUTO_INCREMENT,
@@ -109,6 +110,7 @@ CREATE TABLE publicaciones (
   estado_publicacion ENUM('activa', 'pausada', 'vendida') NOT NULL DEFAULT 'activa',
   oculta TINYINT(1) NOT NULL DEFAULT 0,
   descripcion VARCHAR(400) NOT NULL,
+  imagen_url VARCHAR(500) NULL,
   comuna_id INT UNSIGNED NOT NULL,
   incluye_caja TINYINT(1) NOT NULL DEFAULT 0,
   incluye_manual TINYINT(1) NOT NULL DEFAULT 0,
@@ -116,6 +118,10 @@ CREATE TABLE publicaciones (
   actualizado_en DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (id),
   KEY idx_publicaciones_catalogo (estado_publicacion, oculta, creado_en),
+  KEY idx_publicaciones_vendedor (vendedor_id, creado_en),
+  KEY idx_publicaciones_precio (precio),
+  KEY idx_publicaciones_filtros (oculta, estado_publicacion, consola_id, genero_id, precio),
+  FULLTEXT KEY ft_publicaciones_busqueda (titulo, descripcion),
   CONSTRAINT fk_publicaciones_vendedor FOREIGN KEY (vendedor_id) REFERENCES usuarios (id),
   CONSTRAINT fk_publicaciones_consola FOREIGN KEY (consola_id) REFERENCES consolas (id),
   CONSTRAINT fk_publicaciones_genero FOREIGN KEY (genero_id) REFERENCES generos (id),
@@ -151,6 +157,8 @@ CREATE TABLE operaciones (
   PRIMARY KEY (id),
   KEY idx_operaciones_comprador (comprador_id),
   KEY idx_operaciones_vendedor (vendedor_id),
+  KEY idx_operaciones_pub_estado (publicacion_id, estado),
+  KEY idx_operaciones_en_curso (publicacion_id, comprador_id, estado),
   CONSTRAINT fk_operaciones_publicacion FOREIGN KEY (publicacion_id) REFERENCES publicaciones (id),
   CONSTRAINT fk_operaciones_comprador FOREIGN KEY (comprador_id) REFERENCES usuarios (id),
   CONSTRAINT fk_operaciones_vendedor FOREIGN KEY (vendedor_id) REFERENCES usuarios (id),
@@ -158,8 +166,89 @@ CREATE TABLE operaciones (
   CONSTRAINT ck_operaciones_partes CHECK (comprador_id <> vendedor_id)
 ) ENGINE=InnoDB;
 
+-- -----------------------------------------------------------------------------
+-- Favoritos de usuario (RF-05)
+-- -----------------------------------------------------------------------------
+CREATE TABLE favoritos (
+  usuario_id INT UNSIGNED NOT NULL,
+  publicacion_id INT UNSIGNED NOT NULL,
+  creado_en DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (usuario_id, publicacion_id),
+  KEY idx_favoritos_usuario_fecha (usuario_id, creado_en),
+  CONSTRAINT fk_favoritos_usuario FOREIGN KEY (usuario_id) REFERENCES usuarios (id) ON DELETE CASCADE,
+  CONSTRAINT fk_favoritos_publicacion FOREIGN KEY (publicacion_id) REFERENCES publicaciones (id) ON DELETE CASCADE
+) ENGINE=InnoDB;
+
+-- -----------------------------------------------------------------------------
+-- Calificaciones vinculadas a operaciones completadas (RF-08)
+-- -----------------------------------------------------------------------------
+CREATE TABLE calificaciones (
+  id INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  operacion_id INT UNSIGNED NOT NULL,
+  evaluador_id INT UNSIGNED NOT NULL,
+  evaluado_id INT UNSIGNED NOT NULL,
+  puntaje TINYINT UNSIGNED NOT NULL,
+  comentario VARCHAR(300) NOT NULL DEFAULT '',
+  creado_en DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  UNIQUE KEY uq_calificaciones_operacion (operacion_id),
+  KEY idx_calificaciones_evaluado (evaluado_id, creado_en),
+  CONSTRAINT fk_calificaciones_operacion FOREIGN KEY (operacion_id) REFERENCES operaciones (id),
+  CONSTRAINT fk_calificaciones_evaluador FOREIGN KEY (evaluador_id) REFERENCES usuarios (id),
+  CONSTRAINT fk_calificaciones_evaluado FOREIGN KEY (evaluado_id) REFERENCES usuarios (id),
+  CONSTRAINT ck_calificaciones_puntaje CHECK (puntaje BETWEEN 1 AND 5),
+  CONSTRAINT ck_calificaciones_partes CHECK (evaluador_id <> evaluado_id)
+) ENGINE=InnoDB;
+
+-- -----------------------------------------------------------------------------
+-- Reportes y moderación administrativa de publicaciones (RF-09, RF-10)
+-- -----------------------------------------------------------------------------
+CREATE TABLE reportes (
+  id INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  publicacion_id INT UNSIGNED NOT NULL,
+  reportante_id INT UNSIGNED NOT NULL,
+  motivo ENUM(
+    'Información falsa o engañosa',
+    'Producto no corresponde a un videojuego físico',
+    'Precio sospechoso o estafa',
+    'Contenido ofensivo o inapropiado',
+    'Publicación duplicada',
+    'Otro'
+  ) NOT NULL,
+  comentario VARCHAR(300) NOT NULL DEFAULT '',
+  estado ENUM('pendiente', 'revisado', 'descartado') NOT NULL DEFAULT 'pendiente',
+  accion_tomada ENUM('ninguna', 'mantener', 'ocultar') NOT NULL DEFAULT 'ninguna',
+  moderador_id INT UNSIGNED NULL,
+  nota_moderacion VARCHAR(300) NULL,
+  creado_en DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  resuelto_en DATETIME NULL,
+  PRIMARY KEY (id),
+  KEY idx_reportes_estado_fecha (estado, creado_en),
+  KEY idx_reportes_publicacion (publicacion_id),
+  CONSTRAINT fk_reportes_publicacion FOREIGN KEY (publicacion_id) REFERENCES publicaciones (id) ON DELETE CASCADE,
+  CONSTRAINT fk_reportes_reportante FOREIGN KEY (reportante_id) REFERENCES usuarios (id),
+  CONSTRAINT fk_reportes_moderador FOREIGN KEY (moderador_id) REFERENCES usuarios (id)
+) ENGINE=InnoDB;
+
+-- -----------------------------------------------------------------------------
+-- Notificaciones persistentes para eventos relevantes del usuario (EF1)
+-- -----------------------------------------------------------------------------
+CREATE TABLE notificaciones (
+  id INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  usuario_id INT UNSIGNED NOT NULL,
+  tipo ENUM('operacion', 'calificacion', 'moderacion', 'sistema') NOT NULL DEFAULT 'sistema',
+  titulo VARCHAR(100) NOT NULL,
+  mensaje VARCHAR(255) NOT NULL,
+  ruta VARCHAR(120) NULL,
+  leida TINYINT(1) NOT NULL DEFAULT 0,
+  creado_en DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  KEY idx_notificaciones_usuario_leida (usuario_id, leida, creado_en),
+  CONSTRAINT fk_notificaciones_usuario FOREIGN KEY (usuario_id) REFERENCES usuarios (id) ON DELETE CASCADE
+) ENGINE=InnoDB;
+
 -- =============================================================================
--- Datos de ejemplo (los mismos que usaba el frontend de EP1)
+-- Datos de ejemplo (coherentes con las vistas del frontend y Postman)
 -- =============================================================================
 
 INSERT INTO roles (id, nombre) VALUES (1, 'usuario'), (2, 'administrador');
@@ -197,19 +286,19 @@ INSERT INTO usuarios (id, nombre_usuario, correo, clave_hash, rol_id, region_id,
   (1, 'sebastian_r', 'usuario@replay.cl', @clave_demo, 1,
    (SELECT id FROM regiones WHERE nombre = 'Valparaíso'),
    (SELECT c.id FROM comunas c JOIN regiones r ON r.id = c.region_id WHERE r.nombre = 'Valparaíso' AND c.nombre = 'Valparaíso'),
-   4.8, 12, '2026-03-14 10:00:00'),
+   5.0, 1, '2026-03-14 10:00:00'),
   (2, 'camila_v', 'camila@replay.cl', @clave_demo, 1,
    (SELECT id FROM regiones WHERE nombre = 'Valparaíso'),
    (SELECT c.id FROM comunas c JOIN regiones r ON r.id = c.region_id WHERE r.nombre = 'Valparaíso' AND c.nombre = 'Viña del Mar'),
-   4.6, 27, '2025-11-02 10:00:00'),
+   0.0, 0, '2025-11-02 10:00:00'),
   (3, 'diego_games', 'diego@replay.cl', @clave_demo, 1,
    (SELECT id FROM regiones WHERE nombre = 'Metropolitana'),
    (SELECT c.id FROM comunas c JOIN regiones r ON r.id = c.region_id WHERE r.nombre = 'Metropolitana' AND c.nombre = 'Ñuñoa'),
-   4.2, 8, '2026-01-20 10:00:00'),
+   0.0, 0, '2026-01-20 10:00:00'),
   (4, 'fernanda_m', 'fernanda@replay.cl', @clave_demo, 1,
    (SELECT id FROM regiones WHERE nombre = 'Biobío'),
    (SELECT c.id FROM comunas c JOIN regiones r ON r.id = c.region_id WHERE r.nombre = 'Biobío' AND c.nombre = 'Concepción'),
-   5.0, 5, '2026-05-08 10:00:00'),
+   0.0, 0, '2026-05-08 10:00:00'),
   (5, 'daniel_admin', 'admin@replay.cl', @clave_demo, 2,
    (SELECT id FROM regiones WHERE nombre = 'Metropolitana'),
    (SELECT c.id FROM comunas c JOIN regiones r ON r.id = c.region_id WHERE r.nombre = 'Metropolitana' AND c.nombre = 'Santiago'),
@@ -347,3 +436,20 @@ INSERT INTO operaciones (id, publicacion_id, comprador_id, vendedor_id, modalida
   (4, 10, 2, 1, (SELECT id FROM modalidades_entrega WHERE nombre = 'Retiro en persona'), 'completada', 1, '2026-08-23 18:00:00'),
   (5, 5, 3, 1, (SELECT id FROM modalidades_entrega WHERE nombre = 'Punto de encuentro'), 'pendiente', 0, '2026-09-16 18:00:00'),
   (6, 8, 4, 1, (SELECT id FROM modalidades_entrega WHERE nombre = 'Retiro en persona'), 'cancelada', 0, '2026-08-27 18:00:00');
+
+INSERT INTO favoritos (usuario_id, publicacion_id, creado_en) VALUES
+  (1, 1, '2026-09-16 10:00:00'),
+  (1, 3, '2026-09-16 11:00:00'),
+  (2, 5, '2026-09-16 12:00:00');
+
+INSERT INTO calificaciones (id, operacion_id, evaluador_id, evaluado_id, puntaje, comentario, creado_en) VALUES
+  (1, 4, 2, 1, 5, 'Excelente vendedor, el cartucho venía impecable con su caja y manual.', '2026-08-24 14:30:00');
+
+INSERT INTO reportes (id, publicacion_id, reportante_id, motivo, comentario, estado, accion_tomada, moderador_id, nota_moderacion, creado_en, resuelto_en) VALUES
+  (1, 11, 1, 'Información falsa o engañosa', 'Solicito revisar si incluye la caja original o solo el cartucho.', 'pendiente', 'ninguna', NULL, NULL, '2026-09-17 09:00:00', NULL),
+  (2, 4, 3, 'Otro', 'Consulta resuelta sobre compatibilidad de edición física PS5.', 'descartado', 'mantener', 5, 'La descripción aclara correctamente la edición y estado del disco.', '2026-09-15 16:00:00', '2026-09-15 19:30:00');
+
+INSERT INTO notificaciones (id, usuario_id, tipo, titulo, mensaje, ruta, leida, creado_en) VALUES
+  (1, 1, 'operacion', 'Nueva solicitud de compra', 'diego_games solicitó comprar "Super Mario Odyssey".', '/operaciones', 0, '2026-09-16 18:05:00'),
+  (2, 1, 'calificacion', 'Recibiste una calificación', 'camila_v calificó tu venta con 5 estrellas.', '/perfil', 1, '2026-08-24 14:30:00'),
+  (3, 2, 'operacion', 'Operación completada', 'Tu compra de "Animal Crossing: New Horizons" fue completada.', '/operaciones', 0, '2026-08-23 18:00:00');

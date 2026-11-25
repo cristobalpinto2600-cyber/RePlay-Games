@@ -1,14 +1,23 @@
 /**
  * Catálogos fijos (consolas, géneros, regiones, comunas y modalidades de entrega).
- * Además de listarlos, traduce los nombres que envía el frontend a los identificadores de las
- * tablas relacionadas, informando por campo los valores que no existen.
+ *
+ * Incluye caché en memoria con TTL de 5 minutos (EF4) para evitar consultar 4 tablas estáticas
+ * en cada apertura de formulario o filtro.
  */
 const { pool } = require('../config/db');
 const ErrorHttp = require('../utils/ErrorHttp');
 
 const ESTADOS_CONSERVACION = ['Nuevo / sellado', 'Como nuevo', 'Bueno', 'Aceptable', 'Con detalles'];
+const TTL_CACHE_MS = 5 * 60 * 1000;
+
+let cacheCatalogos = null;
+let cacheExpiraEn = 0;
 
 async function listar() {
+  if (cacheCatalogos && Date.now() < cacheExpiraEn) {
+    return cacheCatalogos;
+  }
+
   const [[consolas], [generos], [modalidades], [comunas]] = await Promise.all([
     pool.execute('SELECT nombre FROM consolas ORDER BY id'),
     pool.execute('SELECT nombre FROM generos ORDER BY id'),
@@ -33,13 +42,16 @@ async function listar() {
     }
   }
 
-  return {
+  cacheCatalogos = {
     consolas: consolas.map((fila) => fila.nombre),
     generos: generos.map((fila) => fila.nombre),
     estadosConservacion: ESTADOS_CONSERVACION,
     modalidadesEntrega: modalidades.map((fila) => fila.nombre),
     regiones,
   };
+  cacheExpiraEn = Date.now() + TTL_CACHE_MS;
+
+  return cacheCatalogos;
 }
 
 async function idPorNombre(tabla, nombre) {

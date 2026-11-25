@@ -1,5 +1,6 @@
 /**
  * Catálogo, detalle y gestión de publicaciones (RF-01 a RF-04) y moderación (RF-10).
+ * Usa matchedData para prevenir asignación masiva (mass assignment) y soporta paginación EF4.
  */
 const { matchedData } = require('express-validator');
 const catalogoModel = require('../models/catalogoModel');
@@ -22,7 +23,22 @@ async function publicacionPropia(id, usuario) {
 
 async function listar(req, res) {
   // matchedData entrega los filtros ya validados y saneados (en Express 5 req.query es de solo lectura).
-  res.json(await publicacionModel.listarCatalogo(matchedData(req, { locations: ['query'] })));
+  const filtros = matchedData(req, { locations: ['query'] });
+
+  if (filtros.page !== undefined || filtros.limit !== undefined) {
+    const resultado = await publicacionModel.listarCatalogoPaginado(filtros);
+    res.set({
+      'X-Total-Count': String(resultado.total),
+      'X-Page': String(resultado.page),
+      'X-Limit': String(resultado.limit),
+      'X-Total-Pages': String(resultado.totalPages),
+    });
+    return res.json(resultado.items);
+  }
+
+  const publicaciones = await publicacionModel.listarCatalogo(filtros);
+  res.set('X-Total-Count', String(publicaciones.length));
+  return res.json(publicaciones);
 }
 
 async function listarMias(req, res) {
@@ -42,8 +58,9 @@ async function obtener(req, res) {
 }
 
 async function crear(req, res) {
-  const referencias = await catalogoModel.resolverReferenciasPublicacion(req.body);
-  const id = await publicacionModel.crear(req.usuario.id, req.body, referencias);
+  const datos = matchedData(req, { locations: ['body'], includeOptionals: true });
+  const referencias = await catalogoModel.resolverReferenciasPublicacion(datos);
+  const id = await publicacionModel.crear(req.usuario.id, datos, referencias);
   res.status(201).location(`/api/publicaciones/${id}`).json(await publicacionModel.buscarPorId(id));
 }
 
@@ -52,8 +69,9 @@ async function actualizar(req, res) {
   if (publicacion.estadoPublicacion === 'vendida') {
     throw new ErrorHttp(409, 'Una publicación vendida ya no se puede editar.');
   }
-  const referencias = await catalogoModel.resolverReferenciasPublicacion(req.body);
-  await publicacionModel.actualizar(publicacion.id, req.body, referencias);
+  const datos = matchedData(req, { locations: ['body'], includeOptionals: true });
+  const referencias = await catalogoModel.resolverReferenciasPublicacion(datos);
+  await publicacionModel.actualizar(publicacion.id, datos, referencias);
   res.json(await publicacionModel.buscarPorId(publicacion.id));
 }
 

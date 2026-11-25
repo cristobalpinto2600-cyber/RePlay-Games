@@ -1,10 +1,22 @@
 /**
- * Acceso a la tabla usuarios. Las respuestas de la API se construyen con aUsuario o
- * aUsuarioPublico, que nunca incluyen el hash de la contraseña (RNF-SEG-03).
+ * Acceso a la tabla usuarios.
+ *
+ * Optimización y minimización de datos (EF4, RNF-SEG-03):
+ *  - SELECT_USUARIO no solicita clave_hash ni la transfiere desde MySQL en perfiles o listados.
+ *  - SELECT_USUARIO_CON_CLAVE se usa exclusivamente al autenticar en el login.
  */
 const { pool } = require('../config/db');
 
 const SELECT_USUARIO = `
+  SELECT u.id, u.nombre_usuario, u.correo, u.activo, u.reputacion,
+         u.total_calificaciones, u.creado_en, ro.nombre AS rol,
+         re.nombre AS region, co.nombre AS comuna
+    FROM usuarios u
+    JOIN roles ro ON ro.id = u.rol_id
+    LEFT JOIN regiones re ON re.id = u.region_id
+    LEFT JOIN comunas co ON co.id = u.comuna_id`;
+
+const SELECT_USUARIO_CON_CLAVE = `
   SELECT u.id, u.nombre_usuario, u.correo, u.clave_hash, u.activo, u.reputacion,
          u.total_calificaciones, u.creado_en, ro.nombre AS rol,
          re.nombre AS region, co.nombre AS comuna
@@ -42,7 +54,7 @@ async function buscarPorId(id) {
 
 /** Incluye clave_hash: solo debe usarse para verificar la contraseña en el login. */
 async function buscarFilaPorCorreo(correo) {
-  const [filas] = await pool.execute(`${SELECT_USUARIO} WHERE u.correo = ?`, [correo]);
+  const [filas] = await pool.execute(`${SELECT_USUARIO_CON_CLAVE} WHERE u.correo = ?`, [correo]);
   return filas[0] ?? null;
 }
 

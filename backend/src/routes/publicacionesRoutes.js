@@ -11,8 +11,14 @@ const soloUsuario = [requiereAutenticacion, permitirRoles('usuario')];
 // Rutas públicas.
 router.get('/', reglas.filtrosCatalogo, validar, publicaciones.listar);
 
-// "/mias" se declara antes de "/:id" para que no se interprete como identificador.
+// "/mias" y "/admin" se declaran antes de "/:id" para que no se interpreten como identificador.
 router.get('/mias', soloUsuario, publicaciones.listarMias);
+router.get(
+  '/admin',
+  requiereAutenticacion,
+  permitirRoles('administrador'),
+  publicaciones.listarAdmin,
+);
 router.get('/:id', reglas.porId, validar, autenticacionOpcional, publicaciones.obtener);
 
 // Gestión de publicaciones propias (rol usuario).

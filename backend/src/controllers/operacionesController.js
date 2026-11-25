@@ -2,6 +2,7 @@
  * Solicitudes de compra y seguimiento de operaciones (RF-06, RF-07).
  */
 const catalogoModel = require('../models/catalogoModel');
+const notificacionModel = require('../models/notificacionModel');
 const operacionModel = require('../models/operacionModel');
 const publicacionModel = require('../models/publicacionModel');
 const usuarioModel = require('../models/usuarioModel');
@@ -91,6 +92,13 @@ async function crear(req, res) {
     vendedorId: publicacion.vendedorId,
     modalidadId: await catalogoModel.idPorNombre('modalidades_entrega', modalidadEntrega),
   });
+  await notificacionModel.crearSilenciosa({
+    usuarioId: publicacion.vendedorId,
+    tipo: 'operacion',
+    titulo: 'Nueva solicitud de compra',
+    mensaje: `${req.usuario.nombreUsuario} solicitó comprar "${publicacion.titulo}" (${modalidadEntrega}).`,
+    ruta: '/operaciones',
+  });
   const [detallada] = await detallar([await operacionModel.buscarPorId(id)], compradorId);
   res.status(201).location(`/api/operaciones/${id}`).json(detallada);
 }
@@ -125,6 +133,15 @@ async function cambiarEstado(req, res) {
   }
 
   const [detallada] = await detallar([await operacionModel.buscarPorId(operacion.id)], usuarioId);
+  const destinatarioId = rol === 'vendedor' ? operacion.compradorId : operacion.vendedorId;
+  const tituloJuego = detallada.publicacion?.titulo ?? 'la publicación';
+  await notificacionModel.crearSilenciosa({
+    usuarioId: destinatarioId,
+    tipo: 'operacion',
+    titulo: `Operación ${nuevo}`,
+    mensaje: `${req.usuario.nombreUsuario} marcó "${tituloJuego}" como ${nuevo}.`,
+    ruta: '/operaciones',
+  });
   res.json(detallada);
 }
 

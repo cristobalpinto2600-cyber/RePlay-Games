@@ -27,10 +27,15 @@ Las siguientes actividades fueron desarrolladas de manera conjunta por todos los
 2. [Objetivo del proyecto](#objetivo-del-proyecto)
 3. [Principales funcionalidades](#principales-funcionalidades)
 4. [Justificación del problema](#justificación-del-problema)
-5. [Entrega EP2: backend, autenticación e integración](#entrega-ep2-backend-autenticación-e-integración)
+5. [Entrega Final (EF1–EF6): funcionalidades completas, seguridad, optimización, RAWG y Docker](#entrega-final-ef1ef6)
     - [Alcance y estado de las funcionalidades](#alcance-y-estado-de-las-funcionalidades)
+    - [EF1: Notificaciones persistentes y almacenamiento local](#ef1-notificaciones-persistentes-y-almacenamiento-local)
+    - [EF2: Mejoras de UI/UX y optimización de rendimiento](#ef2-mejoras-de-uiux-y-optimización-de-rendimiento)
+    - [EF3 y EF4: Seguridad avanzada y optimización de consultas](#ef3-y-ef4-seguridad-avanzada-y-optimización-de-consultas)
+    - [EF5: Integración externa con RAWG API](#ef5-integración-externa-con-rawg-api)
+    - [EF6: Despliegue local con Docker y docker-compose](#ef6-despliegue-local-con-docker-y-docker-compose)
     - [Ramas del repositorio](#ramas-del-repositorio)
-    - [Trazabilidad con los requerimientos de EP1](#trazabilidad-con-los-requerimientos-de-ep1)
+    - [Trazabilidad con los requerimientos](#trazabilidad-con-los-requerimientos)
 6. [Usuarios](#usuarios-objetivo-quién-usará-la-aplicación)
     - [Roles](#roles-del-sistema)
     - [Proto-personas](#proto-personas)
@@ -47,13 +52,13 @@ Las siguientes actividades fueron desarrolladas de manera conjunta por todos los
     - [Tecnologías por capa](#tecnologías-por-capa)
     - [Arquitectura](#arquitectura)
     - [Estructura de carpetas](#estructura-de-carpetas)
-    - [Instalación y ejecución](#instalación-y-ejecución)
+    - [Instalación y ejecución local](#instalación-y-ejecución)
     - [Documentación de la API](#documentación-de-la-api)
     - [Seguridad](#seguridad-1)
     - [Integración frontend + backend](#integración-frontend--backend)
     - [Pruebas con Postman](#pruebas-con-postman)
     - [Modelo relacional](#modelo-relacional)
-    - [Matriz de cumplimiento EP2](#matriz-de-cumplimiento-ep2)
+    - [Matriz de cumplimiento Entrega Final](#matriz-de-cumplimiento-entrega-final)
 12. [Librerías y tecnologías](#librerías-usadas-con-react-ionic)
 13. [Fuentes](#fuentes)
 
@@ -105,60 +110,110 @@ venta de videojuegos físicos usados.
 - Repetición de preguntas que podrían resolverse con campos estandarizados.
 - Menor trazabilidad cuando publicación, acuerdo y seguimiento de la operación quedan dispersos.
 
-## Entrega EP2: backend, autenticación e integración
+## Entrega Final (EF1–EF6)
 
-En EP2 el frontend de EP1 deja de usar datos simulados y pasa a consumir una **API REST propia**
-construida con **Node.js + Express 5**, una **base de datos relacional MySQL** y **autenticación con
-JWT y roles**. El repositorio queda organizado como un monorepo:
+En la **Entrega Final**, RePlay Games completa el 100 % de los requerimientos funcionales y no
+funcionales definidos en EP1, suma notificaciones persistentes y almacenamiento local extendido
+(**EF1**), optimiza interfaz y rendimiento (**EF2**), incorpora seguridad avanzada (**EF3**), optimiza
+consultas con índices y paginación (**EF4**), integra la API externa **RAWG** (**EF5**) y prepara el
+despliegue completo en contenedores con **Docker y `docker-compose`** (**EF6**).
 
-| Carpeta | Contenido |
+| Archivo / Carpeta | Contenido |
 | :--- | :--- |
-| `frontend/` | Aplicación Ionic + React (EP1), ahora conectada a la API. |
-| `backend/` | API REST con Express, autenticación JWT, roles, validación y seguridad. |
-| `database/` | Script SQL reproducible con el modelo relacional y datos de ejemplo. |
-| `postman/` | Colección y environment de Postman, script de reporte y resultados de la ejecución. |
-| `capturas/` | Capturas de EP1 y, en `capturas/ep2/`, del flujo integrado frontend + backend. |
+| `frontend/` | Aplicación Ionic + React con *code splitting*, portadas reales, RAWG y módulos EF1 completos. |
+| `backend/` | API REST Express 5 con seguridad avanzada (XSS/CSP/CORS/rate-limit), RAWG proxy y EF1. |
+| `database/` | Script SQL reproducible (`14` tablas, índices compuestos y `FULLTEXT`, datos de ejemplo). |
+| `postman/` | Colección actualizada (`86` solicitudes en `13` carpetas), environment y generador de reporte. |
+| `docker-compose.yml` | Orquestación de MySQL 8, API Express y frontend Nginx con `healthcheck` y red interna. |
+| `.env.example` | Plantilla de variables de entorno para el despliegue con Docker (sin secretos reales). |
+| `capturas/` | Capturas de EP1, EP2 y evidencias de la Entrega Final. |
 
 ### Alcance y estado de las funcionalidades
 
-| Funcionalidad | Requerimiento | API | Frontend | Estado EP2 |
+| Funcionalidad | Requerimiento | API | Frontend | Estado |
 | :--- | :--- | :--- | :--- | :--- |
 | Registro de usuarios | FT-01 | `POST /api/auth/registro` | `/registro` | Implementado |
 | Inicio de sesión con JWT | FT-02 | `POST /api/auth/login` | `/login` | Implementado |
 | Cierre de sesión | FT-03 | El cliente descarta el token | Menú lateral | Implementado |
 | Restricción por rol | FT-04 | Middleware `permitirRoles` | `Protegida` + menú por rol | Implementado |
-| Explorar y filtrar catálogo | RF-01 | `GET /api/publicaciones` | `/catalogo` | Implementado |
-| Detalle de publicación y vendedor | RF-02 | `GET /api/publicaciones/:id`, `GET /api/usuarios/:id` | `/publicacion/:id` | Implementado |
-| Publicar videojuego | RF-03 | `POST /api/publicaciones` | `/publicar` | Implementado (fotografías aún simuladas) |
+| Explorar, filtrar, ordenar y paginar catálogo | RF-01 | `GET /api/publicaciones` | `/catalogo` | Implementado |
+| Detalle de publicación, vendedor y ficha RAWG | RF-02 | `GET /api/publicaciones/:id`, `GET /api/juegos-externos/ficha` | `/publicacion/:id` | Implementado |
+| Publicar videojuego (con portada y RAWG) | RF-03 | `POST /api/publicaciones`, `GET /api/juegos-externos/buscar` | `/publicar` | Implementado |
 | Editar, pausar, reactivar y eliminar publicaciones propias | RF-04 | `PUT`, `PATCH /estado`, `DELETE /api/publicaciones/:id` | `/mis-publicaciones`, `/publicaciones/:id/editar` | Implementado |
-| Favoritos | RF-05 | — | Botón informativo | Pendiente |
+| Gestionar favoritos | RF-05 | `GET`, `POST`, `DELETE /api/favoritos` | `/favoritos`, detalle | Implementado |
 | Solicitud de compra | RF-06 | `POST /api/operaciones` | Detalle → modal de compra | Implementado |
 | Consultar y gestionar operaciones | RF-07 | `GET /api/operaciones`, `PATCH /api/operaciones/:id/estado` | `/operaciones` | Implementado |
-| Calificar operación completada | RF-08 | — | Botón informativo | Pendiente |
-| Reportar publicación | RF-09 | — | Botón informativo | Pendiente |
-| Moderar publicaciones | RF-10 | `PATCH /api/publicaciones/:id/moderacion` | — | Parcial: ocultar o mostrar desde la API; sin reportes |
+| Calificar operación completada y ver reseñas | RF-08 | `POST /api/calificaciones`, `GET /api/calificaciones/usuario/:id` | `/calificar/:operacionId`, `/perfil`, detalle | Implementado |
+| Reportar publicación | RF-09 | `POST /api/reportes` | Modal en `/publicacion/:id` | Implementado |
+| Moderar publicaciones y resolver reportes | RF-10 | `GET /api/reportes`, `PATCH /api/reportes/:id/resolver`, `GET /api/publicaciones/admin`, `PATCH /api/publicaciones/:id/moderacion` | `/admin`, `/admin/reportes`, `/admin/publicaciones` | Implementado |
 | Gestión administrativa de usuarios | FT-04 | `GET /api/usuarios`, `PATCH /api/usuarios/:id/estado` | `/admin/usuarios` | Implementado |
+| Perfil editable del usuario | RNF-SEG-03 | `PATCH /api/usuarios/perfil` | `/perfil` | Implementado |
+| Notificaciones persistentes | EF1 | `GET /api/notificaciones`, `PATCH /leer`, `PATCH /leer-todas` | Campana en encabezado + `/notificaciones` | Implementado |
+
+### EF1: Notificaciones persistentes y almacenamiento local
+
+- **Notificaciones (`notificaciones`):** cada solicitud de compra, cambio de estado de operación, calificación recibida o acción de moderación administrativa registra una notificación en MySQL para la cuenta afectada. El componente `BotonNotificaciones` muestra un contador de no leídas en el encabezado y la bandeja `/notificaciones` permite marcar lectura individual o masiva y navegar directo a la vista relacionada.
+- **Almacenamiento local (`frontend/src/services/almacenamiento.ts`):** además de persistir la sesión JWT (`replay.sesion`), `localStorage` guarda de forma segura los filtros activos del catálogo (`replay.filtros`), las últimas 5 búsquedas recientes (`replay.busquedas`) y el borrador automático del formulario de publicación (`replay.borrador_publicar`).
+
+### EF2: Mejoras de UI/UX y optimización de rendimiento
+
+- **Code splitting por ruta (`AppRoutes.tsx`):** las 11 vistas secundarias y administrativas utilizan `React.lazy` y `Suspense` para reducir la carga inicial en el navegador (chunks separados generados por Vite).
+- **Portadas reales con carga diferida (`PortadaJuego.tsx`):** renderizado de fotografías con `loading="lazy"` y *fallback* automático al degradado con iniciales si no hay URL o falla la descarga.
+- **Memoización y actualización ágil:** tarjetas memoizadas con `React.memo` (`TarjetaPublicacion.tsx`), paginación progresiva de 8 publicaciones en catálogo, selector de ordenamiento (`recientes`, `precio_asc`, `precio_desc`), *pull-to-refresh* con `IonRefresher` y caché en memoria para `GET /api/catalogos`.
+
+### EF3 y EF4: Seguridad avanzada y optimización de consultas
+
+- **Seguridad avanzada (EF3):** middleware `sanitizar.js` contra XSS sobre `req.body` y validadores, CSP explícita y `Referrer-Policy` en `helmet`, CORS estricto con rechazo `403`, *rate limiting* global sobre `/api` (`API_MAX_PETICIONES`) además del límite específico de `/api/auth`, y uso de `matchedData` contra asignación masiva.
+- **Optimización de consultas (EF4):** índices compuestos (`idx_publicaciones_filtros`, `idx_publicaciones_vendedor`, `idx_operaciones_en_curso`) e índice `FULLTEXT` (`ft_publicaciones_busqueda`), reemplazo de subconsultas correlacionadas por `LEFT JOIN + GROUP BY`, exclusión de `clave_hash` en consultas públicas/listados, datos del vendedor embebidos en `GET /api/publicaciones/:id`, caché de catálogos con `Cache-Control: public, max-age=300`, indexación con `Map` en `O(1)` en operaciones y paginación real con `LIMIT/OFFSET`.
+
+### EF5: Integración externa con RAWG API
+
+Se integró la **RAWG Video Games Database API** porque resuelve una necesidad directa del marketplace sin requerir infraestructura compleja:
+
+1. **Autocompletado al publicar (`/publicar`):** mediante `GET /api/juegos-externos/buscar?q=...`, la persona vendedora busca el título oficial y completa automáticamente el nombre, género compatible y portada oficial.
+2. **Ficha técnica en el detalle (`/publicacion/:id`):** mediante `GET /api/juegos-externos/ficha?titulo=...`, el detalle enriquece la publicación con fecha de lanzamiento, nota Metacritic, valoración y plataformas oficiales de forma asíncrona sin bloquear la vista.
+3. **Arquitectura resiliente:** el backend actúa como *proxy* protegiendo `RAWG_API_KEY` en variables de entorno, aplicando caché en memoria de 10 minutos (máximo 100 entradas), timeout de 5 segundos (`AbortSignal.timeout`) y *fallback* controlado (`disponible: false`) para que la aplicación siga operando normalmente si falta la clave o falla el servicio externo.
+
+### EF6: Despliegue local con Docker y docker-compose
+
+El repositorio incluye `backend/Dockerfile`, `frontend/Dockerfile` (*multi-stage* con Vite + Nginx `nginx.conf`), `.dockerignore` en ambos servicios, `docker-compose.yml` y `.env.example` en la raíz:
+
+```bash
+# 1. Crear el archivo de entorno raíz (no se sube a GitHub)
+cp .env.example .env       # en Windows: copy .env.example .env
+
+# 2. Completar MYSQL_ROOT_PASSWORD, JWT_SECRET (mín. 32 chars) y opcionalmente RAWG_API_KEY
+
+# 3. Construir y levantar la base de datos, la API y el frontend desde cero
+docker compose down -v
+docker compose up --build
+```
+
+- **Frontend (Nginx):** <http://localhost:8080>
+- **Backend (Express API):** <http://localhost:3000/api/salud>
+- **MySQL 8 (puerto externo):** `localhost:3307` (evita colisión con XAMPP en el puerto 3306).
 
 ### Ramas del repositorio
 
 | Rama | Uso |
 | :--- | :--- |
-| `main` | Entrega integrada: `frontend/`, `backend/`, `database/`, `postman/` y este README. |
-| `frontend` | Desarrollo del frontend de EP1. Su historial de commits se incorporó a `main` dentro de `frontend/`, por lo que los commits de cada integrante siguen siendo verificables. |
-| `backend` | Rama creada para iniciar el backend. |
-| `prototipo` | Versión del prototipo entregada en EP1. |
+| `main` | Entrega final integrada: `frontend/`, `backend/`, `database/`, `postman/`, archivos Docker y `README.md`. |
+| `frontend` | Código y documentación del frontend en Ionic + React (actualizado hasta la Entrega Final). |
+| `backend` | Código de la API REST, seguridad, integración RAWG y archivo `database/replay_games.sql`. |
+| `prototipo` | Versión inicial entregada en EP1. |
 
-### Trazabilidad con los requerimientos de EP1
+### Trazabilidad con los requerimientos
 
-| Requerimiento | Dónde se cumple en EP2 |
+| Requerimiento | Dónde se cumple |
 | :--- | :--- |
-| RNF-SEG-01 — Autenticación de funciones protegidas | `backend/src/middlewares/autenticacion.js` exige un JWT válido; en el frontend, `routes/Protegida.tsx`. |
-| RNF-SEG-02 — Autorización por roles | Tabla `roles` y middleware `backend/src/middlewares/autorizacion.js`; menú y rutas según rol en el frontend. |
-| RNF-SEG-03 — Minimización de datos | El perfil público no expone el correo; el token solo contiene el id y el rol; nunca se devuelve la contraseña ni su hash. |
-| RNF-SEG-04 — Protección de secretos | Credenciales y clave JWT en `backend/.env` (ignorado por git), documentadas en `backend/.env.example`. |
-| RNF-UX-03 — Retroalimentación | La API responde mensajes comprensibles y errores por campo; el frontend los muestra junto a cada control. |
-| RNF-REN-01 — Rendimiento | Las pruebas verifican respuestas bajo 3 segundos; en la ejecución registrada en `postman/resultados/resultados.md` el promedio fue de 14 ms en local. |
-| RNF-MAN-01 — Estructura modular | Backend en `routes`, `controllers`, `models`, `middlewares`, `validators` y `config`; el frontend solo cambió el cuerpo de `services/`. |
+| RNF-SEG-01 — Autenticación de funciones protegidas | `backend/src/middlewares/autenticacion.js` exige JWT válido en cada petición; en el frontend, `routes/Protegida.tsx`. |
+| RNF-SEG-02 — Autorización por roles | Tabla `roles` y `backend/src/middlewares/autorizacion.js`; menú, pestañas y rutas protegidas por rol en el frontend. |
+| RNF-SEG-03 — Minimización de datos | El perfil público no expone el correo; el token solo contiene `sub` y `rol`; `SELECT_USUARIO` excluye `clave_hash`. |
+| RNF-SEG-04 — Protección de secretos | Credenciales, `JWT_SECRET` y `RAWG_API_KEY` en `.env` (ignorado por git), documentadas en `.env.example`. |
+| RNF-SEG-05 — Protección XSS y abuso | `backend/src/middlewares/sanitizar.js`, `helmet` con CSP, CORS estricto y `express-rate-limit` global. |
+| RNF-UX-03 — Retroalimentación | Errores por campo, alertas confirmadas, estados vacíos, notificaciones persistentes y avisos de borrador. |
+| RNF-REN-01 — Rendimiento | Índices compuestos/`FULLTEXT`, caché de catálogos y RAWG, paginación `LIMIT/OFFSET` y *code splitting* (`React.lazy`). |
+| RNF-MAN-01 — Estructura modular | Backend separado por capas (`routes`, `controllers`, `models`, `middlewares`, `validators`, `services`, `config`) y frontend modular. |
 
 ## Usuarios objetivo (Quién usará la aplicación)
 
@@ -458,23 +513,21 @@ y `data`, evitando duplicación innecesaria.
 | `/publicaciones/:id/editar` | Editar publicación | Permite modificar una publicación propia. |
 | `/operaciones` | Compras y ventas | Consulta del estado de las operaciones del usuario. |
 | `/calificar/:operacionId` | Calificar operación | Permite calificar una operación completada. |
-| `/perfil` | Perfil | Muestra información pública y reputación del usuario. |
+| `/perfil` | Perfil | Muestra información pública, reseñas y datos editables del usuario. |
+| `/notificaciones` | Notificaciones | Bandeja compartida para revisar avisos del sistema con lectura individual o masiva. |
 
-> Implementadas en EP1: `/publicar` y `/operaciones`. En EP2: `/mis-publicaciones` y
-> `/publicaciones/:id/editar`, y las anteriores pasan a usar datos reales de la API.
+> Implementadas en Entrega Final: todas las rutas de usuario y notificaciones.
 
 #### Rutas protegidas del Administrador
 
 | Ruta | Vista | Descripción |
 | :--- | :--- | :--- |
-| `/admin` | Panel administrador | Resumen de moderación. |
-| `/admin/reportes` | Reportes | Listado y revisión de reportes. |
+| `/admin` | Panel administrador | Resumen de moderación y accesos rápidos. |
+| `/admin/reportes` | Reportes | Listado, filtros por estado y resolución de reportes. |
 | `/admin/publicaciones` | Moderación de publicaciones | Permite mantener u ocultar publicaciones. |
 | `/admin/usuarios` | Usuarios | Vista administrativa de usuarios. |
 
-> Implementadas en EP2: `/admin` (redirige a `/admin/usuarios`) y `/admin/usuarios`. La moderación
-> de publicaciones está disponible en la API (`PATCH /api/publicaciones/:id/moderacion`); su pantalla y
-> los reportes quedan para la siguiente entrega.
+> Implementadas en Entrega Final: todas las rutas administrativas.
 
 ### 2. Relaciones jerárquicas entre vistas
 
@@ -695,27 +748,26 @@ La contraseña deberá cumplir las condiciones de seguridad definidas para la ap
 
 ### Estado de esta entrega
 
-En EP1 se implementaron seis pantallas en Ionic + React con datos simulados. En EP2 esas pantallas
-consumen la API REST: el catálogo, el detalle, la publicación de videojuegos, las solicitudes de compra
-y las operaciones leen y escriben en la base de datos. Además se agregaron tres pantallas nuevas:
-**Mis publicaciones**, **Editar publicación** y **Administración de usuarios**.
+En EP1 se construyó la estructura base en Ionic + React; en EP2 se integró la API REST y, en esta **Entrega Final**, se completan todas las pantallas comprometidas (`Favoritos`, `Calificar`, `Perfil`, `Notificaciones`, `Panel Administrador`, `Reportes` y `Moderación de publicaciones`), la integración con RAWG para portadas y fichas técnicas, almacenamiento local extendido y optimizaciones de rendimiento (*code splitting*, `React.memo`, carga diferida de imágenes, ordenamiento y paginación progresiva).
 
 ### Pantallas implementadas
 
 | Pantalla | Ruta | RF / función | Estado |
 | :--- | :--- | :--- | :--- |
-| Catálogo | `/catalogo` | RF-01 | Búsqueda sin tildes ni mayúsculas y filtros por consola, género, estado, comuna y precio, resueltos por la API. |
-| Detalle de publicación | `/publicacion/:id` | RF-02, RF-06 | Datos del producto, reputación del vendedor y solicitud de compra que crea una operación real. |
-| Publicar videojuego | `/publicar` | RF-03 | Formulario validado en el frontend y en la API; los errores del backend se muestran por campo. |
-| Editar publicación | `/publicaciones/:id/editar` | RF-04 | Mismo formulario, precargado con la publicación propia. |
+| Catálogo | `/catalogo` | RF-01, EF1, EF2 | Búsqueda, filtros persistidos en `localStorage`, ordenamiento, paginación progresiva y `IonRefresher`. |
+| Detalle de publicación | `/publicacion/:id` | RF-02, RF-05, RF-06, RF-09, EF5 | Portada real, ficha técnica RAWG, favorito real, compra, reseñas del vendedor y modal de reporte. |
+| Favoritos | `/favoritos` | RF-05 | Grilla personal sincronizada con la API. |
+| Publicar / Editar | `/publicar`, `/publicaciones/:id/editar` | RF-03, RF-04, EF1, EF5 | Autocompletado desde RAWG, vista previa de portada, catálogos dinámicos y borrador automático en `localStorage`. |
 | Mis publicaciones | `/mis-publicaciones` | RF-04 | Editar, pausar, reactivar y eliminar (con confirmación). |
-| Compras y ventas | `/operaciones` | RF-06, RF-07 | El vendedor confirma, completa o cancela; el comprador cancela mientras está pendiente. |
-| Administración de usuarios | `/admin/usuarios` | FT-04 | Solo administrador: activar o desactivar cuentas. |
-| Inicio de sesión | `/login` | FT-02 | Errores de la API, regreso a la página solicitada y aviso de cuenta desactivada. |
-| Registro | `/registro` | FT-01 | Validaciones y errores por campo (por ejemplo, correo ya registrado). |
-
-La única información que se guarda en el navegador es la sesión (`token` y datos del usuario en
-`localStorage`), que se valida contra la API al abrir la aplicación.
+| Compras y ventas | `/operaciones` | RF-06, RF-07, RF-08 | Seguimiento por estado y acceso directo a calificación en operaciones completadas. |
+| Calificar operación | `/calificar/:operacionId` | RF-08 | Selector interactivo de 1 a 5 estrellas y reseña opcional. |
+| Perfil | `/perfil` | RNF-SEG-03, RF-08 | Edición de nombre de usuario y ubicación, reputación e historial de reseñas. |
+| Notificaciones | `/notificaciones` | EF1 | Bandeja con marcado individual/masivo y contador en el encabezado. |
+| Panel administrador | `/admin` | RF-10 | Métricas de reportes, publicaciones y cuentas con accesos directos. |
+| Reportes | `/admin/reportes` | RF-09, RF-10 | Filtros por estado y resolución confirmada (`ocultar`, `mantener`, `descartar`). |
+| Moderación de publicaciones | `/admin/publicaciones` | RF-10 | Listado completo con visibilidad y cantidad de reportes pendientes. |
+| Administración de usuarios | `/admin/usuarios` | FT-04 | Activar o desactivar cuentas. |
+| Inicio de sesión y Registro | `/login`, `/registro` | FT-01, FT-02 | Validaciones, errores por campo y regreso a ruta protegida. |
 
 ## Backend: API REST con Node.js y Express
 
@@ -726,68 +778,79 @@ La única información que se guarda en el navegador es la sesión (`token` y da
 | Frontend | Ionic 8, React 18, React Router 5, TypeScript 5.9, Vite 7 |
 | Backend | Node.js (20.19+ o 22.12+), Express 5, express-validator, helmet, cors, express-rate-limit, morgan |
 | Autenticación | JSON Web Tokens (`jsonwebtoken`, HS256) y `bcryptjs` para el hash de contraseñas |
-| Base de datos | MySQL 8 o MariaDB 10.4+ (por ejemplo, la incluida en XAMPP), driver `mysql2` con pool de conexiones |
-| Pruebas de API | Postman (colección v2.1) y newman para ejecutarla desde la consola |
+| Base de datos | MySQL 8 o MariaDB 10.4+ (XAMPP o contenedor), driver `mysql2` con pool de conexiones |
+| Servicio externo | RAWG Video Games Database API vía `fetch` nativo y caché en memoria (EF5) |
+| Despliegue | Docker y `docker-compose` (MySQL 8, Node 20 Alpine, Nginx 1.27 Alpine) |
+| Pruebas de API | Postman (colección v2.1 con 86 solicitudes) y newman para ejecutarla desde consola |
 
 ### Arquitectura
 
 ```mermaid
 flowchart LR
-  A["Frontend Ionic + React<br/>services/api.ts"] -- "HTTP + JSON<br/>Authorization: Bearer JWT" --> B["API Express<br/>/api"]
-  B --> C["Middlewares<br/>helmet, cors, límite de intentos,<br/>autenticación JWT, roles, validación"]
-  C --> D["Controladores<br/>reglas de negocio"]
-  D --> E["Modelos<br/>SQL parametrizado"]
-  E --> F[("MySQL / MariaDB<br/>replay_games")]
+  A["Frontend Ionic + React<br/>Nginx / Vite"] -- "HTTP + JSON<br/>Authorization: Bearer JWT" --> B["API Express<br/>/api"]
+  B --> C["Middlewares<br/>helmet CSP, cors estricto, rate-limit,<br/>sanitizar XSS, JWT, roles, validación"]
+  C --> D["Controladores y Servicios<br/>reglas de negocio + proxy RAWG"]
+  D --> E["Modelos<br/>SQL parametrizado e índices"]
+  E --> F[("MySQL 8 / MariaDB<br/>replay_games (14 tablas)")]
+  D -. "HTTPS + caché + fallback" .-> G["API Externa<br/>RAWG Games"]
 ```
 
-Cada solicitud pasa por los middlewares de seguridad, luego por las reglas de validación de su ruta y
-finalmente por el controlador, que aplica las reglas de negocio y usa los modelos para consultar la
-base de datos. Los errores se transforman en un único formato JSON en el manejador central.
+Cada solicitud pasa por las cabeceras CSP, CORS estricto, límite global de tasa y sanitización XSS, luego por la autenticación JWT y reglas de `express-validator`, y finalmente por el controlador y modelo SQL parametrizado.
 
 ### Estructura de carpetas
 
 ```
 RePlay-Games/
 ├── README.md
-├── capturas/                     # Capturas de EP1 y, en ep2/, del flujo integrado
+├── .env.example                  # Variables de entorno para Docker Compose (sin secretos)
+├── docker-compose.yml            # Orquestación de MySQL 8, backend y frontend Nginx
+├── capturas/                     # Capturas de EP1, EP2 y evidencias finales
 ├── database/
-│   └── replay_games.sql          # Modelo relacional + datos de ejemplo (reproducible)
+│   └── replay_games.sql          # Modelo relacional (14 tablas, índices y datos semilla)
 ├── postman/
 │   ├── RePlay-Games.postman_collection.json
 │   ├── RePlay-Games.postman_environment.json
-│   ├── generar-reporte.js        # Convierte el reporte de newman en resultados/resultados.md
-│   └── resultados/resultados.md  # Evidencia de la última ejecución
+│   ├── generar-reporte.js
+│   └── resultados/resultados.md
 ├── backend/
-│   ├── .env.example              # Variables de entorno documentadas (sin secretos)
+│   ├── .dockerignore
+│   ├── .env.example
+│   ├── Dockerfile
 │   ├── package.json
 │   └── src/
-│       ├── server.js             # Arranque: verifica la BD y abre el puerto
-│       ├── app.js                # Express: helmet, cors, JSON, rutas y manejo de errores
-│       ├── config/               # env.js (variables de entorno) y db.js (pool mysql2)
-│       ├── middlewares/          # autenticacion, autorizacion, validar, errores
-│       ├── validators/           # Reglas de express-validator por recurso
-│       ├── controllers/          # auth, usuarios, publicaciones, operaciones, catalogos
+│       ├── server.js
+│       ├── app.js                # Express: helmet CSP, cors estricto, rate-limit, XSS
+│       ├── config/               # env.js y db.js (pool mysql2)
+│       ├── middlewares/          # autenticacion, autorizacion, sanitizar, validar, errores
+│       ├── validators/           # Reglas express-validator por recurso
+│       ├── services/             # rawgService.js (API externa + caché + fallback)
+│       ├── controllers/          # auth, usuarios, publicaciones, operaciones, favoritos, calificaciones, reportes, notificaciones, catalogos, juegosExternos
 │       ├── models/               # Consultas SQL parametrizadas y mapeo a JSON
 │       ├── routes/               # Definición de endpoints bajo /api
 │       └── utils/                # ErrorHttp y emisión/verificación de JWT
 └── frontend/
-    ├── .env.example              # VITE_API_URL
+    ├── .dockerignore
+    ├── .env.example
+    ├── Dockerfile                # Multi-stage build (Vite + Nginx)
+    ├── nginx.conf                # Try-files SPA, gzip y cabeceras de seguridad
     └── src/
-        ├── App.tsx               # Split pane + menú + tabs según el rol
-        ├── components/           # Componentes reutilizables
-        ├── context/              # Sesión: valida el token y reacciona a su expiración
-        ├── data/                 # Catálogos fijos de formularios y cuenta de prueba
-        ├── models/               # Tipos del dominio (iguales a las respuestas de la API)
-        ├── pages/                # Una página por ruta
-        ├── routes/               # Rutas, control de acceso y secciones de navegación
-        ├── services/             # api.ts (cliente HTTP) y un servicio por recurso
+        ├── App.tsx               # Split pane + menú + tabs según rol
+        ├── components/           # PortadaJuego, TarjetaPublicacion, BotonNotificaciones, modales...
+        ├── context/              # SesionContext
+        ├── data/                 # Catálogos de respaldo y cuenta de demostración
+        ├── models/               # Tipos TypeScript del dominio
+        ├── pages/                # Páginas públicas, de usuario y administrativas (con lazy loading)
+        ├── routes/               # AppRoutes (React.lazy), Protegida, navegacion, rutas
+        ├── services/             # api.ts, almacenamiento.ts y servicios por recurso (incl. RAWG y catálogos)
         ├── theme/                # Estilos
         └── utils/                # Formato de precios y fechas
 ```
 
-### Instalación y ejecución
+### Instalación y ejecución local
 
-Requisitos: **Node.js 20.19+ o 22.12+**, npm y **MySQL 8** o **MariaDB 10.4+** (XAMPP sirve).
+**Opción recomendada (Docker Compose):** ver sección [EF6: Despliegue local con Docker y docker-compose](#ef6-despliegue-local-con-docker-y-docker-compose) para levantar MySQL 8, la API y Nginx con `docker compose up --build`.
+
+**Opción manual (sin Docker):** requisitos **Node.js 20.19+ o 22.12+**, npm y **MySQL 8** o **MariaDB 10.4+** (XAMPP sirve).
 
 **1. Base de datos.** El script crea la base `replay_games` desde cero con sus datos de ejemplo:
 
@@ -888,17 +951,33 @@ Todas las cuentas de ejemplo usan la contraseña `replay123`.
 | GET | `/usuarios/:id` | Público | Perfil público del vendedor (sin correo) | 200, 400, 404 |
 | GET | `/usuarios` | Administrador | Lista de cuentas | 200, 401, 403 |
 | PATCH | `/usuarios/:id/estado` | Administrador | Activa o desactiva una cuenta | 200, 400, 401, 403, 404 |
-| GET | `/publicaciones` | Público | Catálogo con filtros `texto`, `consola`, `genero`, `estadoConservacion`, `comuna`, `precioMaximo` | 200, 400 |
+| GET | `/publicaciones` | Público | Catálogo con filtros, `orden` (`recientes`, `precio_asc`, `precio_desc`) y paginación (`page`, `limit`) | 200, 400 |
 | GET | `/publicaciones/mias` | Usuario | Publicaciones propias en cualquier estado | 200, 401, 403 |
-| GET | `/publicaciones/:id` | Público | Detalle de una publicación | 200, 400, 404 |
-| POST | `/publicaciones` | Usuario | Crea una publicación | 201, 400, 401, 403 |
+| GET | `/publicaciones/admin` | Administrador | Listado administrativo con cantidad de reportes pendientes | 200, 401, 403 |
+| GET | `/publicaciones/:id` | Público | Detalle de publicación con datos públicos del vendedor embebidos | 200, 400, 404 |
+| POST | `/publicaciones` | Usuario | Crea una publicación (con `imagenUrl` opcional) | 201, 400, 401, 403 |
 | PUT | `/publicaciones/:id` | Dueño | Reemplaza los datos de una publicación propia | 200, 400, 401, 403, 404, 409 |
 | PATCH | `/publicaciones/:id/estado` | Dueño | Pausa o reactiva (`activa` / `pausada`) | 200, 400, 401, 403, 404, 409 |
 | DELETE | `/publicaciones/:id` | Dueño o administrador | Elimina una publicación sin operaciones | 204, 401, 403, 404, 409 |
-| PATCH | `/publicaciones/:id/moderacion` | Administrador | Oculta o vuelve a mostrar una publicación | 200, 400, 401, 403, 404 |
+| PATCH | `/publicaciones/:id/moderacion` | Administrador | Oculta o vuelve a mostrar una publicación y notifica al vendedor | 200, 400, 401, 403, 404 |
 | GET | `/operaciones` | Usuario | Compras y ventas de la cuenta, con publicación y contraparte | 200, 401, 403 |
-| POST | `/operaciones` | Usuario | Solicitud de compra; queda `pendiente` | 201, 400, 401, 403, 404, 409 |
-| PATCH | `/operaciones/:id/estado` | Comprador o vendedor | Cambia el estado según las reglas de abajo | 200, 400, 401, 403, 404, 409 |
+| POST | `/operaciones` | Usuario | Solicitud de compra; queda `pendiente` y notifica al vendedor | 201, 400, 401, 403, 404, 409 |
+| PATCH | `/operaciones/:id/estado` | Comprador o vendedor | Cambia el estado y notifica a la contraparte | 200, 400, 401, 403, 404, 409 |
+| GET | `/favoritos` | Usuario | Publicaciones guardadas en favoritos | 200, 401, 403 |
+| GET | `/favoritos/ids` | Usuario | Lista de IDs de publicaciones favoritas | 200, 401, 403 |
+| POST | `/favoritos/:id` | Usuario | Agrega una publicación a favoritos | 201, 400, 401, 403, 404 |
+| DELETE | `/favoritos/:id` | Usuario | Quita una publicación de favoritos | 204, 400, 401, 403 |
+| POST | `/calificaciones` | Usuario | Califica una operación completada y recalcula la reputación | 201, 400, 401, 403, 404, 409 |
+| GET | `/calificaciones/usuario/:id` | Público | Historial público de reseñas recibidas por un usuario | 200, 400, 404 |
+| POST | `/reportes` | Usuario | Envía un reporte sobre una publicación ajena | 201, 400, 401, 403, 404, 409 |
+| GET | `/reportes/resumen` | Administrador | Contadores de reportes, publicaciones y cuentas | 200, 401, 403 |
+| GET | `/reportes` | Administrador | Lista reportes con filtro opcional por `estado` | 200, 400, 401, 403 |
+| PATCH | `/reportes/:id/resolver` | Administrador | Resuelve reporte (`mantener`, `ocultar`, `descartar`) y notifica | 200, 400, 401, 403, 404 |
+| GET | `/notificaciones` | Sesión | Lista notificaciones y total de no leídas | 200, 401 |
+| PATCH | `/notificaciones/:id/leer` | Sesión | Marca una notificación como leída | 200, 400, 401, 404 |
+| PATCH | `/notificaciones/leer-todas` | Sesión | Marca todas las notificaciones del usuario como leídas | 200, 401 |
+| GET | `/juegos-externos/buscar` | Sesión | Busca videojuegos en RAWG API (`?q=...`) con caché y *fallback* | 200, 400, 401 |
+| GET | `/juegos-externos/ficha` | Público | Obtiene ficha técnica oficial en RAWG API (`?titulo=...`) | 200, 400 |
 
 Significado de los códigos: **200** correcto, **201** creado (con encabezado `Location`), **204** eliminado
 sin contenido, **400** datos inválidos, **401** sin sesión o token inválido/expirado, **403** sesión
@@ -1007,36 +1086,35 @@ La colección de Postman contiene un ejemplo listo para cada endpoint, incluidos
 | Roles | Tabla `roles` (usuario, administrador) y middleware `permitirRoles(...)`. 401 cuando falta sesión y 403 cuando el rol o el dueño no corresponden. El rol de administrador no compra ni publica, como indica la matriz de acceso. |
 | Validación de entradas | `express-validator` en todos los endpoints (tipos, largos, formatos, listas permitidas) más reglas de negocio en los controladores (comuna de la región indicada, modalidad ofrecida por el vendedor, transiciones válidas). |
 | SQL parametrizado | Todas las consultas usan `pool.execute(sql, parámetros)`; no hay SQL construido concatenando datos del usuario. En la búsqueda se escapan los comodines de `LIKE`. |
-| Secretos fuera del código | Credenciales de la base y clave JWT en `backend/.env`, ignorado por git; `backend/.env.example` documenta cada variable sin valores secretos. |
-| CORS restringido | Solo los orígenes de `CORS_ORIGIN` pueden consumir la API desde el navegador. |
-| Encabezados HTTP | `helmet` (oculta `X-Powered-By`, evita *sniffing* de contenido, etc.) y límite de 100 kB por solicitud. |
-| Fuerza bruta | `express-rate-limit`: máximo `AUTH_MAX_INTENTOS` intentos fallidos de login o registro por IP cada 15 minutos (429). |
-| Minimización de datos | El perfil público no incluye el correo; la lista con correos es solo para el administrador; el registro pide únicamente los datos definidos en EP1. |
-| Integridad en la base | Claves foráneas, `UNIQUE` en correo y nombre de usuario, `CHECK` de precio, largos y comprador distinto del vendedor, y transacciones al crear/editar publicaciones y completar operaciones. |
+| Protección contra XSS | Middleware `sanitizar.js` (`limpiarTexto` + `sanitizarEntrada`) elimina `<script>`, `<style>`, etiquetas HTML, atributos `on*=` y esquemas `javascript:`/`vbscript:` en cuerpo y validadores; los textos renderizados en React quedan además escapados por JSX. |
+| Secretos fuera del código | Credenciales de la base, `JWT_SECRET` y `RAWG_API_KEY` en `.env`, ignorado por git; `.env.example` documenta cada variable sin valores secretos. |
+| CORS estricto | Solo los orígenes de `CORS_ORIGIN` pueden consumir la API desde el navegador; orígenes no autorizados se rechazan con `403`. Se exponen únicamente cabeceras de paginación (`X-Total-Count`, `X-Page`, `X-Limit`, `X-Total-Pages`). |
+| Encabezados HTTP | `helmet` con `Content-Security-Policy` explícita (`defaultSrc: 'self'`, `imgSrc` HTTPS, `objectSrc: 'none'`, `frameAncestors: 'none'`), `Referrer-Policy: no-referrer` y límite de 100 kB por solicitud. |
+| Fuerza bruta y abuso (Rate Limit) | `express-rate-limit` doble: límite específico `AUTH_MAX_INTENTOS` en `/api/auth` y límite global `API_MAX_PETICIONES` sobre `/api` cada 15 minutos (`429`). |
+| Prevención de asignación masiva | Los controladores extraen únicamente los campos validados mediante `matchedData` de `express-validator`. |
+| Minimización de datos | `SELECT_USUARIO` excluye `clave_hash` fuera del login; el perfil público no incluye correo y el registro pide únicamente los datos necesarios. |
+| Integridad en la base | Claves foráneas, `UNIQUE`, `CHECK` (precios, largos, puntajes 1–5, comprador/evaluador distinto de contraparte) y transacciones al publicar, completar operaciones, calificar y moderar reportes. |
 
 ### Integración frontend + backend
 
-- `frontend/src/services/api.ts` centraliza la conexión: arma la URL con `VITE_API_URL`, agrega
-  `Authorization: Bearer <token>`, transforma las respuestas de error en `ErrorApi` (código, mensaje y
-  errores por campo) y, si la API responde 401 a una solicitud con token, borra la sesión y emite el
-  evento `replay:sesion-expirada`.
-- `context/SesionContext.tsx` valida el token guardado con `GET /auth/perfil` al abrir la aplicación y
-  cierra la sesión cuando recibe ese evento; las rutas protegidas redirigen entonces a `/login`
-  recordando la página solicitada.
-- `routes/Protegida.tsx` exige sesión y rol en cada ruta protegida, y `routes/navegacion.ts` define qué
-  secciones muestran el menú lateral y la barra inferior para cada rol.
-- Los servicios mantienen las mismas funciones de EP1, por lo que las páginas casi no cambiaron:
+- `frontend/src/services/api.ts` centraliza la conexión HTTP (`solicitar` y `solicitarConCabeceras`), inyecta `Authorization: Bearer <token>`, convierte errores de la API en `ErrorApi`, limpia la sesión ante `401` (`replay:sesion-expirada`) y sincroniza el contador de notificaciones (`replay:notificaciones-actualizadas`).
+- `context/SesionContext.tsx` valida el token al iniciar y expone `actualizarUsuario` para reflejar cambios del perfil en tiempo real.
+- `routes/Protegida.tsx` exige sesión y rol en cada ruta protegida, mientras `AppRoutes.tsx` aplica *code splitting* (`React.lazy` + `Suspense`) sobre las vistas secundarias y administrativas.
 
-| Servicio del frontend | Endpoint |
+| Servicio del frontend | Endpoints |
 | :--- | :--- |
-| `iniciarSesion`, `registrar`, `verificarSesion` | `POST /auth/login`, `POST /auth/registro`, `GET /auth/perfil` |
-| `listarPublicaciones`, `obtenerPublicacion` | `GET /publicaciones`, `GET /publicaciones/:id` |
-| `listarMisPublicaciones`, `crearPublicacion`, `actualizarPublicacion` | `GET /publicaciones/mias`, `POST /publicaciones`, `PUT /publicaciones/:id` |
-| `cambiarEstadoPublicacion`, `eliminarPublicacion` | `PATCH /publicaciones/:id/estado`, `DELETE /publicaciones/:id` |
-| `obtenerUsuario`, `listarUsuarios`, `cambiarEstadoUsuario` | `GET /usuarios/:id`, `GET /usuarios`, `PATCH /usuarios/:id/estado` |
-| `listarOperaciones`, `crearOperacion`, `cambiarEstadoOperacion` | `GET /operaciones`, `POST /operaciones`, `PATCH /operaciones/:id/estado` |
+| `autenticacionService` | `POST /auth/login`, `POST /auth/registro`, `GET /auth/perfil` |
+| `catalogosService` | `GET /catalogos` (con caché en memoria y respaldo local) |
+| `publicacionesService` | `GET /publicaciones` (paginado/ordenado), `GET /publicaciones/mias`, `GET /publicaciones/admin`, `GET /publicaciones/:id`, `POST`, `PUT`, `PATCH /estado`, `PATCH /moderacion`, `DELETE` |
+| `usuariosService` | `GET /usuarios/:id`, `PATCH /usuarios/perfil`, `GET /usuarios`, `PATCH /usuarios/:id/estado` |
+| `operacionesService` | `GET /operaciones`, `POST /operaciones`, `PATCH /operaciones/:id/estado` |
+| `favoritosService` | `GET /favoritos`, `GET /favoritos/ids`, `POST /favoritos/:id`, `DELETE /favoritos/:id` |
+| `calificacionesService` | `POST /calificaciones`, `GET /calificaciones/usuario/:id` |
+| `reportesService` | `POST /reportes`, `GET /reportes/resumen`, `GET /reportes`, `PATCH /reportes/:id/resolver` |
+| `notificacionesService` | `GET /notificaciones`, `PATCH /notificaciones/:id/leer`, `PATCH /notificaciones/leer-todas` |
+| `juegosExternosService` | `GET /juegos-externos/buscar`, `GET /juegos-externos/ficha` |
 
-#### Capturas del flujo integrado
+#### Capturas del flujo integrado (EP2)
 
 | | |
 | :---: | :---: |
@@ -1056,7 +1134,7 @@ La carpeta `postman/` contiene la colección `RePlay-Games.postman_collection.js
 **Desde Postman:** *Import* → seleccionar ambos archivos → elegir el environment
 **RePlay Games - local** → abrir la colección → **Run**. Las solicitudes deben ejecutarse en orden,
 porque los logins guardan los tokens y la creación de recursos guarda sus identificadores en el
-environment. Cada ejecución usa un correo nuevo, así que se puede repetir sin reiniciar la base.
+environment. Cada ejecución usa un correo nuevo y limpia sus pruebas temporales, por lo que puede repetirse sin reiniciar la base.
 
 **Desde la consola** (con el backend en ejecución):
 
@@ -1065,29 +1143,24 @@ cd backend
 npm run test:api
 ```
 
-Ese comando ejecuta la colección con newman y escribe la evidencia en
-[`postman/resultados/resultados.md`](postman/resultados/resultados.md): cada solicitud con su código
-HTTP, sus pruebas y la respuesta recibida (los tokens se reemplazan por un marcador).
+Ese comando ejecuta las **86 solicitudes** distribuidas en **13 carpetas** (carpetas `0` a `12`, cubriendo EP2 + favoritos, calificaciones, reportes/moderación, notificaciones, sanitización XSS, paginación/ordenamiento y ficha RAWG) y regenera el reporte en [`postman/resultados/resultados.md`](postman/resultados/resultados.md).
 
-Resultado de la ejecución registrada: **64 solicitudes, 149 pruebas, 0 fallidas**. La colección se
-ejecutó contra MySQL 8.0 y contra MariaDB 10.11 con el mismo resultado.
-
-| Carpeta | Solicitudes | Casos exitosos | Casos de error |
-| :--- | :---: | :---: | :---: |
-| 0. Salud del servidor | 1 | 1 | 0 |
-| 1. Autenticación | 10 | 5 | 5 (400, 401 ×3, 409) |
-| 2. Catálogo y perfiles públicos | 9 | 6 | 3 (400 ×2, 404) |
-| 3. Publicaciones | 16 | 8 | 8 (400 ×3, 401, 403 ×3, 404) |
-| 4. Operaciones | 13 | 4 | 9 (400, 403 ×2, 409 ×6) |
-| 5. Eliminar publicación | 4 | 2 | 2 (403, 404) |
-| 6. Administración y roles | 9 | 4 | 5 (400, 401 ×2, 403 ×2) |
-| 7. Errores generales | 2 | 0 | 2 (400, 404) |
-| **Total** | **64** | **30** | **34** |
-
-Además de los códigos HTTP, las pruebas verifican, entre otras cosas, que el token solo contenga `sub`
-y `rol`, que ninguna respuesta incluya contraseñas o hashes, que el perfil público no exponga el
-correo, que un visitante no vea una publicación oculta y que una cuenta desactivada pierda el acceso
-con su token anterior.
+| Carpeta | Solicitudes | Cobertura |
+| :--- | :---: | :--- |
+| 0. Salud del servidor | 1 | Estado de API y BD |
+| 1. Autenticación | 10 | Registro, login, perfil y casos 400/401/409 |
+| 2. Catálogo y perfiles públicos | 9 | Catálogos, búsqueda, filtros y perfiles |
+| 3. Publicaciones | 16 | CRUD de publicaciones, roles y moderación básica |
+| 4. Operaciones | 13 | Flujo de compra, transiciones de estado y reglas |
+| 5. Eliminar publicación | 4 | Eliminación autorizada y rechazos |
+| 6. Administración y roles | 9 | Gestión de cuentas y perfil propio |
+| 7. Errores generales | 2 | JSON inválido y ruta inexistente |
+| 8. Favoritos (RF-05) | 5 | Alta, listado, IDs, eliminación y 401 |
+| 9. Calificaciones (RF-08) | 4 | Calificación única, bloqueo de duplicados y reseñas |
+| 10. Reportes y Moderación (RF-09, RF-10) | 7 | Creación, duplicados, resumen, listado, resolución y 403 |
+| 11. Notificaciones (EF1) | 2 | Listado con contador y marcado de lectura |
+| 12. Seguridad avanzada, Paginación y RAWG (EF3, EF4, EF5) | 4 | Sanitización XSS, paginación con ordenamiento y consulta RAWG |
+| **Total** | **86** | **Colección completa Entrega Final** |
 
 ### Modelo relacional
 
@@ -1106,6 +1179,13 @@ erDiagram
   publicaciones ||--o{ operaciones : "publicacion_id"
   usuarios ||--o{ operaciones : "comprador_id / vendedor_id"
   modalidades_entrega ||--o{ operaciones : "modalidad_id"
+  usuarios ||--o{ favoritos : "usuario_id"
+  publicaciones ||--o{ favoritos : "publicacion_id"
+  operaciones ||--o| calificaciones : "operacion_id"
+  usuarios ||--o{ calificaciones : "evaluador_id / evaluado_id"
+  publicaciones ||--o{ reportes : "publicacion_id"
+  usuarios ||--o{ reportes : "reportante_id / moderador_id"
+  usuarios ||--o{ notificaciones : "usuario_id"
 
   roles {
     INT id PK
@@ -1156,6 +1236,7 @@ erDiagram
     ENUM estado_publicacion
     TINYINT oculta
     VARCHAR descripcion
+    VARCHAR imagen_url
     INT comuna_id FK
     TINYINT incluye_caja
     TINYINT incluye_manual
@@ -1175,6 +1256,43 @@ erDiagram
     TINYINT calificada
     DATETIME creado_en
   }
+  favoritos {
+    INT usuario_id PK, FK
+    INT publicacion_id PK, FK
+    DATETIME creado_en
+  }
+  calificaciones {
+    INT id PK
+    INT operacion_id UK, FK
+    INT evaluador_id FK
+    INT evaluado_id FK
+    TINYINT puntaje
+    VARCHAR comentario
+    DATETIME creado_en
+  }
+  reportes {
+    INT id PK
+    INT publicacion_id FK
+    INT reportante_id FK
+    ENUM motivo
+    VARCHAR comentario
+    ENUM estado
+    ENUM accion_tomada
+    INT moderador_id FK
+    VARCHAR nota_moderacion
+    DATETIME creado_en
+    DATETIME resuelto_en
+  }
+  notificaciones {
+    INT id PK
+    INT usuario_id FK
+    ENUM tipo
+    VARCHAR titulo
+    VARCHAR mensaje
+    VARCHAR ruta
+    TINYINT leida
+    DATETIME creado_en
+  }
 ```
 
 | Tabla | Propósito | Restricciones principales |
@@ -1183,39 +1301,33 @@ erDiagram
 | `regiones`, `comunas` | Ubicaciones normalizadas; cada comuna pertenece a una región. | FK `comunas.region_id`, `UNIQUE(region_id, nombre)` |
 | `consolas`, `generos`, `modalidades_entrega` | Catálogos estandarizados de los formularios y filtros. | `UNIQUE(nombre)` |
 | `usuarios` | Cuentas, rol, ubicación opcional, estado y reputación. | `UNIQUE(correo)`, `UNIQUE(nombre_usuario)`, FK a `roles`, `regiones`, `comunas`, `CHECK` reputación 0–5 |
-| `publicaciones` | Videojuegos publicados, su estado y si están ocultos por moderación. | FK a `usuarios`, `consolas`, `generos`, `comunas`; `CHECK` precio 1–500.000, título ≥ 3 y descripción ≥ 20 caracteres |
-| `publicacion_entregas` | Modalidades de entrega de cada publicación (muchos a muchos). | PK compuesta; `ON DELETE CASCADE` desde `publicaciones` |
-| `operaciones` | Solicitudes de compra y su estado. Guarda el vendedor para conservar el historial. | FK a `publicaciones`, `usuarios` (comprador y vendedor) y `modalidades_entrega`; `CHECK` comprador distinto del vendedor |
+| `publicaciones` | Videojuegos publicados, portada opcional, estado y moderación. | Índices compuestos + `FULLTEXT(titulo, descripcion)`; `CHECK` precio 1–500.000, título ≥ 3 y descripción ≥ 20 |
+| `publicacion_entregas` | Modalidades de entrega de cada publicación (muchos a muchos). | PK compuesta; `ON DELETE CASCADE` |
+| `operaciones` | Solicitudes de compra y su estado. | Índices por comprador/vendedor/estado; `CHECK` comprador distinto del vendedor |
+| `favoritos` | Publicaciones guardadas por cada usuario (RF-05). | PK compuesta `(usuario_id, publicacion_id)`; `ON DELETE CASCADE` |
+| `calificaciones` | Valoraciones 1–5 y reseñas de operaciones completadas (RF-08). | `UNIQUE(operacion_id)`, `CHECK` puntaje 1–5 y partes distintas |
+| `reportes` | Reportes de publicaciones y decisiones de moderación (RF-09, RF-10). | FKs a `publicaciones` (`ON DELETE CASCADE`) y `usuarios` |
+| `notificaciones` | Avisos persistentes por eventos de negocio (EF1). | Índice `(usuario_id, leida, creado_en)`; `ON DELETE CASCADE` |
 
-### Matriz de cumplimiento EP2
+### Matriz de cumplimiento Entrega Final
 
 | Criterio | Evidencia en el repositorio |
 | :--- | :--- |
-| EP 2.1 Servidor | `backend/src/server.js` y `backend/src/app.js`; módulos en `config`, `routes`, `controllers`, `models`, `middlewares`, `validators`; pasos de instalación en este README. |
-| EP 2.2 Base relacional | `database/replay_games.sql`: 10 tablas con claves foráneas, `UNIQUE` y `CHECK`, datos de ejemplo y script reproducible; diagrama y tabla del modelo en esta sección; conexión con pool `mysql2`. |
-| EP 2.3 API REST | 20 endpoints JSON con GET, POST, PUT, PATCH y DELETE y códigos 200, 201, 204, 400, 401, 403, 404, 409, 429 y 500. |
-| EP 2.4 JWT y roles | Registro y login con JWT con expiración, `GET /auth/perfil`, rutas protegidas, roles usuario y administrador con pruebas de acceso no permitido. |
-| EP 2.5 Seguridad | bcrypt, express-validator, `.env` + `.env.example`, SQL parametrizado, helmet, CORS restringido y límite de intentos (ver sección Seguridad). |
-| EP 2.6 Ionic React + backend | `frontend/src/services/api.ts`, servicios por recurso, envío del JWT, manejo de errores y de expiración del token, guardias de ruta y capturas en `capturas/ep2/`. |
-| EP 2.7 Pruebas | Colección y environment en `postman/`, 64 solicitudes con 34 casos de error, resultados exportados en `postman/resultados/resultados.md`. |
-| Documentación | Este README: alcance, ramas, tecnologías, arquitectura, ejecución, API, seguridad, integración, pruebas y modelo relacional. |
+| **EF1.** Funcionalidades completas, notificaciones y almacenamiento local | CRUD completo, favoritos (`/favoritos`), calificaciones (`/calificar/:operacionId`), reportes/moderación (`/admin`, `/admin/reportes`, `/admin/publicaciones`), perfil (`/perfil`), notificaciones (`/notificaciones`, `BotonNotificaciones`) y `localStorage` en sesión, filtros, búsquedas recientes y borradores. |
+| **EF2.** Mejoras UI/UX y optimización de rendimiento | *Code splitting* (`React.lazy` + `Suspense`), portadas con `loading="lazy"` y fallback, `React.memo`, caché de catálogos, paginación progresiva, ordenamiento e `IonRefresher`. |
+| **EF3.** Seguridad avanzada en API | `sanitizar.js` contra XSS, SQL parametrizado (`mysql2`), `helmet` con CSP, CORS estricto `403`, rate limit global + `/auth`, `bcryptjs`, JWT con verificación en BD y `matchedData`. |
+| **EF4.** Optimización de consultas | 14 tablas con índices compuestos y `FULLTEXT`, `LEFT JOIN + GROUP BY`, exclusión de `clave_hash`, vendedor embebido en detalle, caché de catálogos, `Map` en `O(1)` y `LIMIT/OFFSET`. |
+| **EF5.** Integración con servicio externo | `rawgService.js` + `/api/juegos-externos/*` + autocompletado al publicar y ficha técnica en detalle con caché, timeout y fallback controlado. |
+| **EF6.** Despliegue local con Docker | `backend/Dockerfile`, `frontend/Dockerfile` + `nginx.conf`, `.dockerignore`, `docker-compose.yml` (MySQL 8 + API + Nginx) y `.env.example`. |
+| **EF7.** Documentación y pruebas | Este `README.md` integrado, colección Postman de 86 solicitudes y ramas `main`, `backend` y `frontend` sincronizadas. |
 
-#### Lista de verificación antes de la entrega
+#### Lista de verificación antes de la defensa
 
-- [ ] Importar `database/replay_games.sql` en una base limpia.
-- [ ] Crear `backend/.env` con una `JWT_SECRET` propia y no subirlo al repositorio.
-- [ ] Iniciar el backend y comprobar `GET /api/salud`.
-- [ ] Ejecutar `npm run test:api` sin pruebas fallidas.
-- [ ] Ejecutar `npm run build` en `frontend/` sin errores.
-- [ ] Probar en el navegador el login de `usuario@replay.cl` y de `admin@replay.cl`.
-- [ ] Integrar la rama de trabajo en `main` y entregar el enlace del repositorio.
-
-### Pendiente para las próximas entregas
-
-- Favoritos (RF-05), calificaciones (RF-08) y reportes con panel de moderación (RF-09, RF-10).
-- Carga y almacenamiento real de fotografías.
-- Perfil de usuario en el frontend (la API ya permite actualizarlo con `PATCH /usuarios/perfil`).
-- Despliegue con Docker y docker-compose.
+- [ ] Confirmar que el repositorio en GitHub y el enlace de Figma tengan visibilidad **pública**.
+- [ ] Crear `.env` desde `.env.example` en la raíz y levantar todo el sistema con `docker compose down -v && docker compose up --build`.
+- [ ] Guardar capturas del despliegue Docker (`docker compose ps` y app en `http://localhost:8080`) en `capturas/final/`.
+- [ ] Ejecutar `cd backend && npm run test:api` contra la API corriendo para actualizar `postman/resultados/resultados.md` con las 86 solicitudes.
+- [ ] Verificar que las ramas `main`, `backend` (incluyendo `database/replay_games.sql`) y `frontend` estén actualizadas en GitHub.
 
 ### Capturas de pantalla de EP1
 
@@ -1292,12 +1404,7 @@ Ionic y una hoja de estilos propia (`src/theme/`), lo que permite el modo claro 
 > Se utiliza la línea 8 de Ionic porque la versión 9, publicada durante el desarrollo de esta
 > entrega, migra a React Router 6 y modifica la forma de declarar las rutas.
 
-**Incorporadas en EP2:** Node.js con Express 5, MySQL 8 / MariaDB con `mysql2`, autenticación con
-JWT (`jsonwebtoken`) y `bcryptjs`, validación con `express-validator`, seguridad con `helmet`, `cors` y
-`express-rate-limit`, y pruebas de API con Postman y newman (ver
-[Tecnologías por capa](#tecnologías-por-capa)).
-
-**Planificada para entregas posteriores:** Docker con docker-compose para el despliegue.
+**Incorporadas en EP2 y Entrega Final:** Node.js con Express 5, MySQL 8 / MariaDB con `mysql2`, autenticación con JWT (`jsonwebtoken`) y `bcryptjs`, validación con `express-validator`, seguridad avanzada (sanitización XSS, `helmet` con CSP, `cors` estricto y `express-rate-limit`), integración externa con **RAWG API**, pruebas con Postman y newman, y despliegue en contenedores con **Docker y `docker-compose`** (ver [Tecnologías por capa](#tecnologías-por-capa)).
 
 ## Fuentes
 

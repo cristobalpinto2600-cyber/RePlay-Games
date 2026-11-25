@@ -4,6 +4,7 @@
  */
 const { matchedData } = require('express-validator');
 const catalogoModel = require('../models/catalogoModel');
+const notificacionModel = require('../models/notificacionModel');
 const publicacionModel = require('../models/publicacionModel');
 const ErrorHttp = require('../utils/ErrorHttp');
 
@@ -43,6 +44,10 @@ async function listar(req, res) {
 
 async function listarMias(req, res) {
   res.json(await publicacionModel.listarPorVendedor(req.usuario.id));
+}
+
+async function listarAdmin(req, res) {
+  res.json(await publicacionModel.listarParaAdmin());
 }
 
 /** Las publicaciones ocultas por moderación solo las ven su dueño y el administrador. */
@@ -114,7 +119,28 @@ async function moderar(req, res) {
     throw new ErrorHttp(404, 'La publicación no existe.');
   }
   await publicacionModel.cambiarOculta(publicacion.id, req.body.oculta);
+  await notificacionModel.crearSilenciosa({
+    usuarioId: publicacion.vendedorId,
+    tipo: 'moderacion',
+    titulo: req.body.oculta
+      ? 'Publicación ocultada por moderación'
+      : 'Publicación restaurada en el catálogo',
+    mensaje: req.body.oculta
+      ? `Tu publicación "${publicacion.titulo}" fue ocultada por un administrador.`
+      : `Tu publicación "${publicacion.titulo}" vuelve a estar visible en el catálogo.`,
+    ruta: '/mis-publicaciones',
+  });
   res.json(await publicacionModel.buscarPorId(publicacion.id));
 }
 
-module.exports = { listar, listarMias, obtener, crear, actualizar, cambiarEstado, eliminar, moderar };
+module.exports = {
+  listar,
+  listarMias,
+  listarAdmin,
+  obtener,
+  crear,
+  actualizar,
+  cambiarEstado,
+  eliminar,
+  moderar,
+};

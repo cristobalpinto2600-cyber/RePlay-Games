@@ -1,15 +1,11 @@
 /**
  * Estado de sesión compartido por toda la aplicación (FT-02, FT-03, RNF-SEG-01).
- * Las páginas y el menú consultan aquí quién está autenticado; las rutas protegidas lo usan
- * para decidir si redirigen a /login.
- *
- * Al abrir la aplicación se valida el token guardado con GET /api/auth/perfil, y si la API
- * rechaza el token más adelante (expiró o la cuenta fue desactivada) la sesión se cierra sola.
  */
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import type { Credenciales, DatosRegistro, Usuario } from '../models';
 import { EVENTO_SESION_EXPIRADA } from '../services/api';
 import {
+  actualizarUsuarioGuardado,
   cerrarSesion as cerrarSesionServicio,
   iniciarSesion as iniciarSesionServicio,
   leerSesion,
@@ -24,6 +20,7 @@ interface ValorSesion {
   iniciarSesion: (credenciales: Credenciales) => Promise<Usuario>;
   registrar: (datos: DatosRegistro) => Promise<Usuario>;
   cerrarSesion: () => void;
+  actualizarUsuario: (usuario: Usuario) => void;
 }
 
 const SesionContext = createContext<ValorSesion | undefined>(undefined);
@@ -66,9 +63,14 @@ export const SesionProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     setUsuario(null);
   }, []);
 
+  const actualizarUsuario = useCallback((actualizado: Usuario) => {
+    actualizarUsuarioGuardado(actualizado);
+    setUsuario(actualizado);
+  }, []);
+
   const valor = useMemo<ValorSesion>(
-    () => ({ usuario, cargando, iniciarSesion, registrar, cerrarSesion }),
-    [usuario, cargando, iniciarSesion, registrar, cerrarSesion],
+    () => ({ usuario, cargando, iniciarSesion, registrar, cerrarSesion, actualizarUsuario }),
+    [usuario, cargando, iniciarSesion, registrar, cerrarSesion, actualizarUsuario],
   );
 
   return <SesionContext.Provider value={valor}>{children}</SesionContext.Provider>;

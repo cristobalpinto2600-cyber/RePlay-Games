@@ -6,11 +6,17 @@ export const RUTAS = {
   inicio: '/',
   catalogo: '/catalogo',
   detalle: '/publicacion/:id',
+  favoritos: '/favoritos',
   publicar: '/publicar',
   editar: '/publicaciones/:id/editar',
   misPublicaciones: '/mis-publicaciones',
   operaciones: '/operaciones',
+  calificar: '/calificar/:operacionId',
+  perfil: '/perfil',
+  notificaciones: '/notificaciones',
   admin: '/admin',
+  adminReportes: '/admin/reportes',
+  adminPublicaciones: '/admin/publicaciones',
   adminUsuarios: '/admin/usuarios',
   login: '/login',
   registro: '/registro',
@@ -24,6 +30,11 @@ export function rutaDetalle(id: string | number): string {
 /** Construye la ruta para editar una publicación propia (RF-04). */
 export function rutaEditar(id: string | number): string {
   return `/publicaciones/${id}/editar`;
+}
+
+/** Construye la ruta para calificar una operación completada (RF-08). */
+export function rutaCalificar(operacionId: string | number): string {
+  return `/calificar/${operacionId}`;
 }
 
 /**

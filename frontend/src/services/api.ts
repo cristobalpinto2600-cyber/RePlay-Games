@@ -1,10 +1,9 @@
 /**
- * Cliente HTTP de la API REST (EP2).
+ * Cliente HTTP de la API REST (EP2 / Entrega Final).
  *
  * Centraliza la URL base, el envío del token JWT en el encabezado Authorization y la conversión
- * de las respuestas de error, de modo que cada servicio solo indique qué recurso consulta.
- * Si la API responde 401 a una solicitud que llevaba token (sesión expirada o cuenta
- * desactivada), se borra la sesión guardada y se avisa al resto de la aplicación.
+ * de las respuestas de error. Si la API responde 401 a una solicitud que llevaba token, borra la
+ * sesión guardada y notifica al resto de la aplicación.
  */
 import type { Usuario } from '../models';
 import { borrar, leer } from './almacenamiento';
@@ -17,6 +16,13 @@ export const CLAVE_SESION = 'replay.sesion';
 /** Evento que se emite cuando la API rechaza el token guardado. */
 export const EVENTO_SESION_EXPIRADA = 'replay:sesion-expirada';
 
+/** Evento para sincronizar el contador de notificaciones del encabezado. */
+export const EVENTO_NOTIFICACIONES = 'replay:notificaciones-actualizadas';
+
+export function notificarCambioNotificaciones(): void {
+  window.dispatchEvent(new Event(EVENTO_NOTIFICACIONES));
+}
+
 export interface SesionGuardada {
   token: string;
   usuario: Usuario;
@@ -25,6 +31,11 @@ export interface SesionGuardada {
 export interface ErrorCampo {
   campo: string;
   mensaje: string;
+}
+
+export interface ResultadoConCabeceras<T> {
+  datos: T;
+  headers: Headers;
 }
 
 /** Error devuelto por la API, con su código HTTP y el detalle por campo cuando existe. */
@@ -42,7 +53,11 @@ export class ErrorApi extends Error {
 
 type Metodo = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
 
-export async function solicitar<T>(ruta: string, metodo: Metodo = 'GET', cuerpo?: unknown): Promise<T> {
+async function ejecutarPeticion<T>(
+  ruta: string,
+  metodo: Metodo = 'GET',
+  cuerpo?: unknown,
+): Promise<ResultadoConCabeceras<T>> {
   const token = leer<SesionGuardada>(CLAVE_SESION)?.token;
   const encabezados: Record<string, string> = { Accept: 'application/json' };
   if (cuerpo !== undefined) {
@@ -64,7 +79,7 @@ export async function solicitar<T>(ruta: string, metodo: Metodo = 'GET', cuerpo?
   }
 
   if (respuesta.status === 204) {
-    return undefined as T;
+    return { datos: undefined as T, headers: respuesta.headers };
   }
 
   const datos = await respuesta.json().catch(() => null);
@@ -79,7 +94,20 @@ export async function solicitar<T>(ruta: string, metodo: Metodo = 'GET', cuerpo?
       datos?.errores ?? [],
     );
   }
-  return datos as T;
+  return { datos: datos as T, headers: respuesta.headers };
+}
+
+export async function solicitar<T>(ruta: string, metodo: Metodo = 'GET', cuerpo?: unknown): Promise<T> {
+  const { datos } = await ejecutarPeticion<T>(ruta, metodo, cuerpo);
+  return datos;
+}
+
+export function solicitarConCabeceras<T>(
+  ruta: string,
+  metodo: Metodo = 'GET',
+  cuerpo?: unknown,
+): Promise<ResultadoConCabeceras<T>> {
+  return ejecutarPeticion<T>(ruta, metodo, cuerpo);
 }
 
 /** Mensaje legible de cualquier error, para mostrarlo en un aviso. */

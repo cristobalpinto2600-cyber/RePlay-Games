@@ -1,21 +1,41 @@
 /**
- * Portada del videojuego generada a partir del título.
+ * Portada del videojuego (EF2, EF5).
  *
- * EP1 no incluye carga de imágenes reales: se dibuja un degradado estable (siempre el mismo
- * color para el mismo título) con las iniciales del juego, de modo que el catálogo se vea
- * completo sin depender de archivos ni servicios externos. En EP2 este componente se reemplaza
- * por las fotografías subidas por la persona vendedora (RF-02, RF-03).
+ * Si la publicación cuenta con imagenUrl válida, muestra la fotografía con carga diferida
+ * (loading="lazy"). Si no hay imagen o falla su descarga, muestra el degradado estable con
+ * iniciales del título como respaldo visual.
  */
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { iniciales, tonoDesdeTexto } from '../utils/formato';
 
 interface Props {
   titulo: string;
   consola: string;
+  imagenUrl?: string;
   tamano?: 'miniatura' | 'tarjeta' | 'detalle';
 }
 
-const PortadaJuego: React.FC<Props> = ({ titulo, consola, tamano = 'tarjeta' }) => {
+const PortadaJuego: React.FC<Props> = ({ titulo, consola, imagenUrl, tamano = 'tarjeta' }) => {
+  const [errorImagen, setErrorImagen] = useState(false);
+
+  useEffect(() => {
+    setErrorImagen(false);
+  }, [imagenUrl]);
+
+  if (imagenUrl && !errorImagen) {
+    return (
+      <div className={`portada portada--${tamano} portada--con-imagen`}>
+        <img
+          src={imagenUrl}
+          alt={`Portada de ${titulo} para ${consola}`}
+          loading="lazy"
+          className="portada__imagen"
+          onError={() => setErrorImagen(true)}
+        />
+      </div>
+    );
+  }
+
   const tono = tonoDesdeTexto(titulo);
   const estilo: React.CSSProperties = {
     backgroundImage: `linear-gradient(140deg, hsl(${tono} 62% 48%), hsl(${(tono + 45) % 360} 68% 26%))`,

@@ -1,11 +1,5 @@
 /**
  * Compras y ventas del usuario (RF-06, RF-07, RF-08). Ruta protegida: exige sesión iniciada.
- *
- * Separa las operaciones por tipo con un IonSegment y muestra el estado de cada una con el mismo
- * color y el mismo nombre en toda la aplicación (RNF-UX-02). Cada operación ofrece las acciones
- * que el backend permite según el rol y el estado: el vendedor confirma, completa o cancela y el
- * comprador puede cancelar mientras está pendiente. La calificación queda habilitada únicamente
- * en las operaciones completadas (documento, sección 4.7).
  */
 import {
   IonBadge,
@@ -26,8 +20,8 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import EncabezadoPagina from '../components/EncabezadoPagina';
 import MensajeVacio from '../components/MensajeVacio';
 import PortadaJuego from '../components/PortadaJuego';
-import { RUTAS, rutaDetalle } from '../routes/rutas';
-import { mensajeDeError } from '../services/api';
+import { RUTAS, rutaCalificar, rutaDetalle } from '../routes/rutas';
+import { mensajeDeError, notificarCambioNotificaciones } from '../services/api';
 import type {
   AccionOperacion,
   OperacionDetallada,
@@ -69,7 +63,6 @@ const OperacionesPage: React.FC = () => {
     void cargar();
   }, [cargar]);
 
-  // Al volver a la vista se recargan las operaciones, por ejemplo tras una nueva solicitud de compra.
   useIonViewWillEnter(() => {
     if (primeraVisita.current) {
       primeraVisita.current = false;
@@ -83,6 +76,7 @@ const OperacionesPage: React.FC = () => {
     try {
       await cambiarEstadoOperacion(item.operacion.id, accion.estado);
       setAviso(`La operación de "${item.publicacion.titulo}" quedó ${accion.estado}.`);
+      notificarCambioNotificaciones();
       await cargar();
     } catch (causa) {
       setAviso(mensajeDeError(causa, 'No fue posible actualizar la operación.'));
@@ -165,9 +159,9 @@ const OperacionesPage: React.FC = () => {
             {puedeCalificar && (
               <IonButton
                 size="small"
-                onClick={() =>
-                  setAviso('La calificación de operaciones se incorpora en la próxima entrega (RF-08).')
-                }
+                color="secondary"
+                routerLink={rutaCalificar(operacion.id)}
+                routerDirection="forward"
               >
                 Calificar
               </IonButton>

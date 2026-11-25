@@ -5,6 +5,7 @@ const catalogos = require('../controllers/catalogosController');
 const authRoutes = require('./authRoutes');
 const calificacionesRoutes = require('./calificacionesRoutes');
 const favoritosRoutes = require('./favoritosRoutes');
+const juegosExternosRoutes = require('./juegosExternosRoutes');
 const notificacionesRoutes = require('./notificacionesRoutes');
 const operacionesRoutes = require('./operacionesRoutes');
 const publicacionesRoutes = require('./publicacionesRoutes');
@@ -28,5 +29,6 @@ router.use('/favoritos', favoritosRoutes);
 router.use('/calificaciones', calificacionesRoutes);
 router.use('/reportes', reportesRoutes);
 router.use('/notificaciones', notificacionesRoutes);
+router.use('/juegos-externos', juegosExternosRoutes);
 
 module.exports = router;

@@ -1,6 +1,12 @@
-/** Datos públicos del vendedor (RF-02) y gestión administrativa de usuarios. */
+/** Perfil propio, datos públicos del vendedor (RF-02) y gestión administrativa de usuarios. */
 import type { Usuario } from '../models';
 import { ErrorApi, solicitar } from './api';
+
+export interface DatosPerfil {
+  nombreUsuario?: string;
+  region?: string | null;
+  comuna?: string | null;
+}
 
 export async function obtenerUsuario(id: number): Promise<Usuario | undefined> {
   try {
@@ -11,6 +17,10 @@ export async function obtenerUsuario(id: number): Promise<Usuario | undefined> {
     }
     throw error;
   }
+}
+
+export function actualizarPerfil(datos: DatosPerfil): Promise<Usuario> {
+  return solicitar<Usuario>('/usuarios/perfil', 'PATCH', datos);
 }
 
 /** Solo administrador. */

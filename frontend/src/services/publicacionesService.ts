@@ -1,9 +1,31 @@
 /**
- * Catálogo, detalle y gestión de publicaciones contra la API REST (RF-01 a RF-04).
+ * Catálogo, detalle, gestión de publicaciones y moderación contra la API REST (RF-01 a RF-04, RF-10, EF2).
  */
 import { PRECIO_MAXIMO } from '../data/catalogos';
-import type { DatosPublicacion, EstadoPublicacion, FiltrosCatalogo, Publicacion } from '../models';
-import { ErrorApi, solicitar } from './api';
+import type {
+  DatosPublicacion,
+  EstadoPublicacion,
+  FiltrosCatalogo,
+  Publicacion,
+  PublicacionAdmin,
+} from '../models';
+import { ErrorApi, solicitar, solicitarConCabeceras } from './api';
+
+export type OrdenCatalogo = 'recientes' | 'precio_asc' | 'precio_desc';
+
+export interface OpcionesCatalogo {
+  page?: number;
+  limit?: number;
+  orden?: OrdenCatalogo;
+}
+
+export interface RespuestaCatalogoPaginado {
+  items: Publicacion[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
 
 /** Estado inicial de los filtros del catálogo: sin filtrar. */
 export const FILTROS_INICIALES: FiltrosCatalogo = {
@@ -15,12 +37,10 @@ export const FILTROS_INICIALES: FiltrosCatalogo = {
   precioMaximo: PRECIO_MAXIMO,
 };
 
-/**
- * Publicaciones visibles en el catálogo. La API devuelve las activas y las pausadas (marcadas con
- * su estado) y deja fuera las vendidas y las ocultas por moderación. La búsqueda por texto ignora
- * mayúsculas y tildes. Con el precio en el tope del control no se filtra por precio.
- */
-export function listarPublicaciones(filtros: FiltrosCatalogo): Promise<Publicacion[]> {
+function construirQueryCatalogo(
+  filtros: FiltrosCatalogo,
+  opciones: OpcionesCatalogo = {},
+): string {
   const parametros = new URLSearchParams();
   const texto = filtros.texto.trim();
   if (texto) parametros.set('texto', texto);
@@ -28,10 +48,40 @@ export function listarPublicaciones(filtros: FiltrosCatalogo): Promise<Publicaci
   if (filtros.genero) parametros.set('genero', filtros.genero);
   if (filtros.estadoConservacion) parametros.set('estadoConservacion', filtros.estadoConservacion);
   if (filtros.comuna) parametros.set('comuna', filtros.comuna);
-  if (filtros.precioMaximo < PRECIO_MAXIMO) parametros.set('precioMaximo', String(filtros.precioMaximo));
-
+  if (filtros.precioMaximo < PRECIO_MAXIMO) {
+    parametros.set('precioMaximo', String(filtros.precioMaximo));
+  }
+  if (opciones.orden && opciones.orden !== 'recientes') {
+    parametros.set('orden', opciones.orden);
+  }
+  if (opciones.page !== undefined) {
+    parametros.set('page', String(opciones.page));
+  }
+  if (opciones.limit !== undefined) {
+    parametros.set('limit', String(opciones.limit));
+  }
   const consulta = parametros.toString();
-  return solicitar<Publicacion[]>(`/publicaciones${consulta ? `?${consulta}` : ''}`);
+  return consulta ? `?${consulta}` : '';
+}
+
+export function listarPublicaciones(filtros: FiltrosCatalogo): Promise<Publicacion[]> {
+  return solicitar<Publicacion[]>(`/publicaciones${construirQueryCatalogo(filtros)}`);
+}
+
+/** Lista paginada para carga progresiva en el catálogo (EF2, EF4). */
+export async function listarPublicacionesPaginadas(
+  filtros: FiltrosCatalogo,
+  opciones: OpcionesCatalogo = { page: 1, limit: 8, orden: 'recientes' },
+): Promise<RespuestaCatalogoPaginado> {
+  const query = construirQueryCatalogo(filtros, opciones);
+  const { datos, headers } = await solicitarConCabeceras<Publicacion[]>(`/publicaciones${query}`);
+
+  const total = Number(headers.get('X-Total-Count')) || datos.length;
+  const page = Number(headers.get('X-Page')) || opciones.page || 1;
+  const limit = Number(headers.get('X-Limit')) || opciones.limit || Math.max(datos.length, 1);
+  const totalPages = Number(headers.get('X-Total-Pages')) || Math.max(1, Math.ceil(total / limit));
+
+  return { items: datos, total, page, limit, totalPages };
 }
 
 /** Detalle de una publicación; undefined si no existe o fue retirada del catálogo. */
@@ -49,6 +99,16 @@ export async function obtenerPublicacion(id: string | number): Promise<Publicaci
 /** Publicaciones propias en cualquier estado (RF-04). */
 export function listarMisPublicaciones(): Promise<Publicacion[]> {
   return solicitar<Publicacion[]>('/publicaciones/mias');
+}
+
+/** Listado completo para moderación administrativa (RF-10). */
+export function listarPublicacionesAdmin(): Promise<PublicacionAdmin[]> {
+  return solicitar<PublicacionAdmin[]>('/publicaciones/admin');
+}
+
+/** Ocultar o restaurar una publicación como administrador (RF-10). */
+export function moderarPublicacion(id: number, oculta: boolean): Promise<Publicacion> {
+  return solicitar<Publicacion>(`/publicaciones/${id}/moderacion`, 'PATCH', { oculta });
 }
 
 export function crearPublicacion(datos: DatosPublicacion): Promise<Publicacion> {

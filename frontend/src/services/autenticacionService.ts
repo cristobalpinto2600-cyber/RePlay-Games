@@ -1,6 +1,5 @@
 /**
  * Autenticación contra la API REST con JWT (FT-01, FT-02, FT-03).
- * Las firmas son las mismas de EP1, por lo que las páginas que las usan no cambian.
  */
 import type { Credenciales, DatosRegistro, Usuario } from '../models';
 import { borrar, escribir, leer } from './almacenamiento';
@@ -37,6 +36,14 @@ export async function registrar(datos: DatosRegistro): Promise<Usuario> {
   return usuario;
 }
 
+/** Actualiza los datos guardados del usuario conservando el token vigente. */
+export function actualizarUsuarioGuardado(usuario: Usuario): void {
+  const guardada = leer<SesionGuardada>(CLAVE_SESION);
+  if (guardada?.token) {
+    guardarSesion(guardada.token, usuario);
+  }
+}
+
 /** Usuario guardado localmente, disponible de inmediato al abrir la aplicación. */
 export function leerSesion(): Usuario | null {
   const guardada = leer<SesionGuardada>(CLAVE_SESION);
@@ -45,7 +52,6 @@ export function leerSesion(): Usuario | null {
 
 /**
  * Confirma con el backend que el token guardado sigue vigente y actualiza los datos del usuario.
- * Si la API no responde se conserva la sesión local para no expulsar a la persona sin motivo.
  */
 export async function verificarSesion(): Promise<Usuario | null> {
   const guardada = leer<SesionGuardada>(CLAVE_SESION);

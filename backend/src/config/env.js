@@ -1,5 +1,5 @@
 /**
- * Configuración de la API leída desde variables de entorno (RNF-SEG-04).
+ * Configuración de la API leída desde variables de entorno (RNF-SEG-04, EF5).
  * Los secretos viven en backend/.env, que no se versiona; .env.example documenta cada variable.
  */
 const path = require('node:path');
@@ -42,4 +42,9 @@ module.exports = {
     .filter(Boolean),
   maxIntentosAutenticacion: Number(process.env.AUTH_MAX_INTENTOS) || 20,
   maxPeticionesApi: Number(process.env.API_MAX_PETICIONES) || 200,
+  rawg: {
+    apiKey: (process.env.RAWG_API_KEY || '').trim(),
+    apiUrl: (process.env.RAWG_API_URL || 'https://api.rawg.io/api').replace(/\/$/, ''),
+    timeoutMs: Number(process.env.RAWG_TIMEOUT_MS) || 5000,
+  },
 };

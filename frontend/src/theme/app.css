@@ -442,3 +442,247 @@
 .catalogo__resultados .tarjeta {
   width: 100%;
 }
+
+/* ---------- Notificaciones y búsquedas recientes (EF1) ---------- */
+
+.boton-notificaciones {
+  position: relative;
+}
+
+.boton-notificaciones__badge {
+  position: absolute;
+  top: 2px;
+  right: 0;
+  font-size: 0.65rem;
+  padding: 2px 5px;
+  border-radius: 999px;
+}
+
+.notificacion-item--no-leida {
+  --background: rgba(var(--ion-color-primary-rgb), 0.08);
+}
+
+.notificacion-item--no-leida h3 {
+  font-weight: 700;
+}
+
+.busquedas-recientes {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.busquedas-recientes__etiqueta {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.82rem;
+  color: var(--ion-color-medium);
+}
+
+.borrador-aviso {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 12px;
+  margin-bottom: 14px;
+  border-radius: 12px;
+  border: 1px solid var(--replay-borde);
+  background: rgba(var(--ion-color-primary-rgb), 0.08);
+  font-size: 0.85rem;
+}
+
+/* ---------- Favoritos, Calificaciones y Perfil (EF1) ---------- */
+
+.favorito-col {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.estrellas {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.estrellas ion-icon {
+  font-size: 2rem;
+}
+
+.resena {
+  padding: 12px 14px;
+  border: 1px solid var(--replay-borde);
+  border-radius: var(--replay-radio);
+  margin-bottom: 10px;
+  background: var(--ion-card-background, var(--replay-superficie));
+}
+
+.resena__cabecera {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.resena__texto {
+  margin: 8px 0 0;
+  font-size: 0.92rem;
+  line-height: 1.45;
+}
+
+.perfil__cabecera {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 14px;
+}
+
+.perfil__avatar {
+  font-size: 56px;
+  color: var(--ion-color-primary);
+  flex-shrink: 0;
+}
+
+.perfil__nombre {
+  margin: 0 0 2px;
+  font-size: 1.35rem;
+}
+
+.perfil__badges {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.perfil__accesos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+/* ---------- Panel administrador (RF-10) ---------- */
+
+.panel-admin__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.stat-card {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 16px;
+  border-radius: var(--replay-radio);
+  border: 1px solid var(--replay-borde);
+  background: var(--ion-card-background, var(--replay-superficie));
+}
+
+.stat-card__valor {
+  font-size: 1.75rem;
+  font-weight: 800;
+  color: var(--ion-color-primary);
+}
+
+.stat-card__etiqueta {
+  font-size: 0.85rem;
+  color: var(--ion-color-medium);
+}
+
+.panel-admin__accesos {
+  display: flex;
+  flex-direction: column;
+}
+
+/* ---------- Portadas reales, RAWG y paginación (EF2, EF5) ---------- */
+
+.portada--con-imagen {
+  background: var(--ion-color-light, #eef1f5);
+}
+
+.portada__imagen {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.catalogo__controles {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.catalogo__paginacion {
+  display: flex;
+  justify-content: center;
+  margin-top: 20px;
+}
+
+.rawg-buscador {
+  margin-bottom: 16px;
+}
+
+.rawg-sugerencias {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.rawg-sugerencia {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  width: 100%;
+  text-align: left;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid var(--replay-borde);
+  background: var(--ion-card-background, var(--replay-superficie));
+  color: inherit;
+  cursor: pointer;
+}
+
+.rawg-sugerencia:hover {
+  border-color: var(--ion-color-primary);
+}
+
+.rawg-ficha {
+  margin: 14px 0;
+  padding: 12px 14px;
+  border-radius: var(--replay-radio);
+  border: 1px solid var(--replay-borde);
+  background: rgba(var(--ion-color-primary-rgb), 0.06);
+}
+
+.rawg-ficha__cabecera {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.rawg-ficha__titulo {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 600;
+  font-size: 0.92rem;
+}
+
+.vista-previa-portada {
+  max-width: 260px;
+  margin-bottom: 12px;
+}

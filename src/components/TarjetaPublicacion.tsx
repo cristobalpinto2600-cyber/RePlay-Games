@@ -1,7 +1,6 @@
 /**
- * Tarjeta de una publicación dentro del catálogo (RF-01).
- * Muestra la información mínima comparable definida en el documento: portada, título, precio,
- * consola, estado de conservación y comuna.
+ * Tarjeta de una publicación dentro del catálogo (RF-01, EF2).
+ * Memoizada con React.memo para evitar renderizados innecesarios durante búsquedas y paginación.
  */
 import { IonBadge, IonCard, IonCardContent, IonChip, IonIcon } from '@ionic/react';
 import { locationOutline } from 'ionicons/icons';
@@ -18,7 +17,11 @@ interface Props {
 const TarjetaPublicacion: React.FC<Props> = ({ publicacion }) => (
   <IonCard className="tarjeta" button routerLink={rutaDetalle(publicacion.id)}>
     <div className="tarjeta__portada">
-      <PortadaJuego titulo={publicacion.titulo} consola={publicacion.consola} />
+      <PortadaJuego
+        titulo={publicacion.titulo}
+        consola={publicacion.consola}
+        imagenUrl={publicacion.imagenUrl}
+      />
       {publicacion.estadoPublicacion !== 'activa' && (
         <IonBadge color="warning" className="tarjeta__estado">
           {publicacion.estadoPublicacion === 'pausada' ? 'Pausada' : 'Vendida'}
@@ -47,4 +50,4 @@ const TarjetaPublicacion: React.FC<Props> = ({ publicacion }) => (
   </IonCard>
 );
 
-export default TarjetaPublicacion;
+export default React.memo(TarjetaPublicacion);

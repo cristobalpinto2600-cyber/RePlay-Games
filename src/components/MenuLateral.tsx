@@ -18,33 +18,12 @@ import {
   IonToolbar,
   useIonRouter,
 } from '@ionic/react';
-import {
-  addCircleOutline,
-  gameControllerOutline,
-  logInOutline,
-  logOutOutline,
-  personAddOutline,
-  personCircleOutline,
-  swapHorizontalOutline,
-} from 'ionicons/icons';
+import { logInOutline, logOutOutline, personAddOutline, personCircleOutline } from 'ionicons/icons';
 import React from 'react';
 import { useLocation } from 'react-router-dom';
 import { useSesion } from '../context/SesionContext';
+import { seccionesVisibles } from '../routes/navegacion';
 import { RUTAS } from '../routes/rutas';
-
-interface ItemMenu {
-  titulo: string;
-  ruta: string;
-  icono: string;
-  /** Indica al usuario que la sección exige sesión iniciada. */
-  protegida: boolean;
-}
-
-const ITEMS: ItemMenu[] = [
-  { titulo: 'Catálogo', ruta: RUTAS.catalogo, icono: gameControllerOutline, protegida: false },
-  { titulo: 'Publicar juego', ruta: RUTAS.publicar, icono: addCircleOutline, protegida: true },
-  { titulo: 'Compras y ventas', ruta: RUTAS.operaciones, icono: swapHorizontalOutline, protegida: true },
-];
 
 interface Props {
   /** Se desactiva en las pantallas de acceso para no mostrar navegación sin sesión. */
@@ -74,12 +53,15 @@ const MenuLateral: React.FC<Props> = ({ deshabilitado = false }) => {
           <IonIcon icon={personCircleOutline} className="menu__avatar" aria-hidden="true" />
           <div>
             <strong>{usuario ? usuario.nombreUsuario : 'Visitante'}</strong>
-            <IonNote>{usuario ? usuario.correo : 'Sin sesión iniciada'}</IonNote>
+            <IonNote>
+              {usuario ? usuario.correo : 'Sin sesión iniciada'}
+              {usuario?.rol === 'administrador' ? ' · Administrador' : ''}
+            </IonNote>
           </div>
         </div>
 
         <IonList lines="none">
-          {ITEMS.map((item) => (
+          {seccionesVisibles(usuario).map((item) => (
             <IonMenuToggle key={item.ruta} autoHide={false}>
               <IonItem
                 routerLink={item.ruta}
@@ -89,7 +71,7 @@ const MenuLateral: React.FC<Props> = ({ deshabilitado = false }) => {
               >
                 <IonIcon slot="start" icon={item.icono} aria-hidden="true" />
                 <IonLabel>{item.titulo}</IonLabel>
-                {item.protegida && !usuario && <IonNote slot="end">Requiere sesión</IonNote>}
+                {item.rol && !usuario && <IonNote slot="end">Requiere sesión</IonNote>}
               </IonItem>
             </IonMenuToggle>
           ))}

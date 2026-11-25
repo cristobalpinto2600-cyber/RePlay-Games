@@ -1,12 +1,6 @@
 /**
- * Detalle de una publicación (RF-02) e inicio de la solicitud de compra (RF-06).
- *
- * Reúne la información estandarizada del documento: fotografía, título, consola, género, precio,
- * estado de conservación, descripción, ubicación, modalidades de entrega y datos públicos del
- * vendedor con su reputación.
- *
- * Comprar sin sesión iniciada lleva a /login recordando esta página, de modo que al autenticarse
- * la persona vuelve exactamente aquí (Task Flow 1 del documento).
+ * Detalle de una publicación (RF-02), favoritos (RF-05), solicitud de compra (RF-06),
+ * reseñas del vendedor (RF-08), reporte (RF-09) y ficha externa RAWG (EF5).
  */
 import {
   IonBadge,
@@ -26,22 +20,35 @@ import {
 import {
   alertCircleOutline,
   calendarOutline,
+  cloudOfflineOutline,
   cubeOutline,
   flagOutline,
+  heart,
   heartOutline,
   locationOutline,
   personCircleOutline,
+  sparklesOutline,
   star,
 } from 'ionicons/icons';
 import React, { useEffect, useState } from 'react';
 import { useHistory, useLocation, useParams } from 'react-router-dom';
 import EncabezadoPagina from '../components/EncabezadoPagina';
 import MensajeVacio from '../components/MensajeVacio';
+import ModalReportarPublicacion from '../components/ModalReportarPublicacion';
 import ModalSolicitudCompra from '../components/ModalSolicitudCompra';
 import PortadaJuego from '../components/PortadaJuego';
 import { useSesion } from '../context/SesionContext';
-import type { ModalidadEntrega, Publicacion, Usuario } from '../models';
+import type { Calificacion, ModalidadEntrega, Publicacion, Usuario } from '../models';
 import { RUTAS, rutaLoginCon } from '../routes/rutas';
+import { mensajeDeError, notificarCambioNotificaciones } from '../services/api';
+import { listarCalificacionesUsuario } from '../services/calificacionesService';
+import {
+  agregarFavorito,
+  listarIdsFavoritos,
+  quitarFavorito,
+} from '../services/favoritosService';
+import { type JuegoExterno, obtenerFichaExterna } from '../services/juegosExternosService';
+import { crearOperacion } from '../services/operacionesService';
 import { estaDisponible, obtenerPublicacion } from '../services/publicacionesService';
 import { obtenerUsuario } from '../services/usuariosService';
 import { formatearFecha, formatearPrecio } from '../utils/formato';
@@ -54,49 +61,144 @@ const DetallePublicacionPage: React.FC = () => {
 
   const [publicacion, setPublicacion] = useState<Publicacion | null>(null);
   const [vendedor, setVendedor] = useState<Usuario | undefined>(undefined);
+  const [resenas, setResenas] = useState<Calificacion[]>([]);
+  const [fichaRawg, setFichaRawg] = useState<JuegoExterno | null>(null);
+  const [esFavorito, setEsFavorito] = useState(false);
+  const [actualizandoFavorito, setActualizandoFavorito] = useState(false);
+
   const [cargando, setCargando] = useState(true);
+  const [errorCarga, setErrorCarga] = useState('');
   const [modalCompra, setModalCompra] = useState(false);
-  const [aviso, setAviso] = useState<string>('');
-  const [confirmacion, setConfirmacion] = useState<string>('');
+  const [modalReporte, setModalReporte] = useState(false);
+  const [enviandoSolicitud, setEnviandoSolicitud] = useState(false);
+  const [aviso, setAviso] = useState('');
+  const [confirmacion, setConfirmacion] = useState('');
 
   useEffect(() => {
     let vigente = true;
     setCargando(true);
+    setErrorCarga('');
+    setFichaRawg(null);
 
-    obtenerPublicacion(id).then(async (encontrada) => {
-      if (!vigente) {
-        return;
-      }
-      setPublicacion(encontrada ?? null);
+    obtenerPublicacion(id)
+      .then(async (encontrada) => {
+        if (!vigente) return;
+        setPublicacion(encontrada ?? null);
 
-      if (encontrada) {
-        const datosVendedor = await obtenerUsuario(encontrada.vendedorId);
-        if (vigente) {
-          setVendedor(datosVendedor);
+        if (encontrada) {
+          const [datosVendedor, resenasVendedor] = await Promise.all([
+            encontrada.vendedor
+              ? Promise.resolve(encontrada.vendedor)
+              : obtenerUsuario(encontrada.vendedorId),
+            listarCalificacionesUsuario(encontrada.vendedorId).catch(() => []),
+          ]);
+          if (vigente) {
+            setVendedor(datosVendedor);
+            setResenas(resenasVendedor);
+          }
+
+          obtenerFichaExterna(encontrada.titulo)
+            .then((resp) => {
+              if (vigente && resp.disponible && resp.ficha) {
+                setFichaRawg(resp.ficha);
+              }
+            })
+            .catch(() => {
+              // Ficha externa auxiliar: nunca bloquea el detalle principal.
+            });
         }
-      }
-      setCargando(false);
-    });
+      })
+      .catch((causa) => {
+        if (vigente) {
+          setPublicacion(null);
+          setErrorCarga(mensajeDeError(causa));
+        }
+      })
+      .finally(() => {
+        if (vigente) {
+          setCargando(false);
+        }
+      });
 
     return () => {
       vigente = false;
     };
   }, [id]);
 
-  const iniciarSolicitud = () => {
-    if (!usuario) {
-      // Se guarda la ruta actual para volver al detalle después de iniciar sesión.
-      historial.push(rutaLoginCon(`${ubicacion.pathname}${ubicacion.search}`));
+  useEffect(() => {
+    if (!publicacion || usuario?.rol !== 'usuario') {
+      setEsFavorito(false);
       return;
     }
+    let vigente = true;
+    listarIdsFavoritos()
+      .then((ids) => {
+        if (vigente) {
+          setEsFavorito(ids.includes(publicacion.id));
+        }
+      })
+      .catch(() => {
+        // Sin bloqueo si falla la verificación auxiliar de favoritos.
+      });
+
+    return () => {
+      vigente = false;
+    };
+  }, [publicacion?.id, usuario?.id, usuario?.rol]);
+
+  const exigirSesion = (): boolean => {
+    if (!usuario) {
+      historial.push(rutaLoginCon(`${ubicacion.pathname}${ubicacion.search}`));
+      return false;
+    }
+    return true;
+  };
+
+  const iniciarSolicitud = () => {
+    if (!exigirSesion()) return;
     setModalCompra(true);
   };
 
-  const confirmarSolicitud = (modalidad: ModalidadEntrega) => {
+  const alternarFavorito = async () => {
+    if (!publicacion || !exigirSesion()) return;
+    setActualizandoFavorito(true);
+    try {
+      if (esFavorito) {
+        await quitarFavorito(publicacion.id);
+        setEsFavorito(false);
+        setAviso('Quitado de tus favoritos.');
+      } else {
+        await agregarFavorito(publicacion.id);
+        setEsFavorito(true);
+        setAviso('Guardado en tus favoritos.');
+      }
+    } catch (error) {
+      setAviso(mensajeDeError(error, 'No fue posible actualizar favoritos.'));
+    } finally {
+      setActualizandoFavorito(false);
+    }
+  };
+
+  const abrirReporte = () => {
+    if (!exigirSesion()) return;
+    setModalReporte(true);
+  };
+
+  const confirmarSolicitud = async (modalidad: ModalidadEntrega) => {
+    if (!publicacion) return;
     setModalCompra(false);
-    setConfirmacion(
-      `Solicitud registrada con entrega "${modalidad}". Queda como operación pendiente de confirmación del vendedor.`,
-    );
+    setEnviandoSolicitud(true);
+    try {
+      await crearOperacion(publicacion.id, modalidad);
+      notificarCambioNotificaciones();
+      setConfirmacion(
+        `Solicitud registrada con entrega "${modalidad}". Queda como operación pendiente de confirmación del vendedor.`,
+      );
+    } catch (error) {
+      setAviso(mensajeDeError(error, 'No fue posible registrar la solicitud.'));
+    } finally {
+      setEnviandoSolicitud(false);
+    }
   };
 
   if (cargando) {
@@ -121,9 +223,9 @@ const DetallePublicacionPage: React.FC = () => {
         <EncabezadoPagina titulo="Publicación" conVolver />
         <IonContent>
           <MensajeVacio
-            icono={alertCircleOutline}
-            titulo="Publicación no disponible"
-            descripcion="La publicación que buscas no existe o fue retirada del catálogo."
+            icono={errorCarga ? cloudOfflineOutline : alertCircleOutline}
+            titulo={errorCarga ? 'No pudimos cargar la publicación' : 'Publicación no disponible'}
+            descripcion={errorCarga || 'La publicación que buscas no existe o fue retirada del catálogo.'}
           >
             <IonButton routerLink={RUTAS.catalogo} routerDirection="root">
               Volver al catálogo
@@ -136,6 +238,7 @@ const DetallePublicacionPage: React.FC = () => {
 
   const disponible = estaDisponible(publicacion);
   const esPropia = usuario?.id === publicacion.vendedorId;
+  const esAdministrador = usuario?.rol === 'administrador';
 
   return (
     <IonPage>
@@ -146,6 +249,7 @@ const DetallePublicacionPage: React.FC = () => {
           <PortadaJuego
             titulo={publicacion.titulo}
             consola={publicacion.consola}
+            imagenUrl={publicacion.imagenUrl ?? fichaRawg?.imagenUrl ?? undefined}
             tamano="detalle"
           />
 
@@ -162,12 +266,35 @@ const DetallePublicacionPage: React.FC = () => {
                   {publicacion.estadoPublicacion === 'pausada' ? 'Pausada' : 'Vendida'}
                 </IonBadge>
               )}
+              {publicacion.oculta && <IonBadge color="danger">Oculta por moderación</IonBadge>}
             </div>
           </div>
 
           <IonText>
             <p>{publicacion.descripcion}</p>
           </IonText>
+
+          {fichaRawg && (
+            <div className="rawg-ficha">
+              <div className="rawg-ficha__cabecera">
+                <span className="rawg-ficha__titulo">
+                  <IonIcon icon={sparklesOutline} aria-hidden="true" /> Ficha técnica oficial (RAWG)
+                </span>
+                {fichaRawg.metacritic !== null && (
+                  <IonBadge color="success">Metacritic {fichaRawg.metacritic}</IonBadge>
+                )}
+              </div>
+              <p className="operacion__meta">
+                Lanzamiento: {fichaRawg.fechaLanzamiento ?? 'No informado'}
+                {fichaRawg.rating !== null ? ` · Valoración: ${fichaRawg.rating}/5` : ''}
+              </p>
+              {fichaRawg.plataformas.length > 0 && (
+                <p className="operacion__meta">
+                  Plataformas: {fichaRawg.plataformas.join(', ')}
+                </p>
+              )}
+            </div>
+          )}
 
           <h2 className="titulo-seccion">Información del producto</h2>
           <IonList lines="full">
@@ -213,7 +340,9 @@ const DetallePublicacionPage: React.FC = () => {
                 <h3>{vendedor ? vendedor.nombreUsuario : 'Usuario de RePlay Games'}</h3>
                 <p>
                   {vendedor && vendedor.totalCalificaciones > 0
-                    ? `${vendedor.reputacion.toFixed(1)} de 5 · ${vendedor.totalCalificaciones} calificaciones`
+                    ? `${vendedor.reputacion.toFixed(1)} de 5 · ${vendedor.totalCalificaciones} ${
+                        vendedor.totalCalificaciones === 1 ? 'calificación' : 'calificaciones'
+                      }`
                     : 'Sin calificaciones todavía'}
                 </p>
               </IonLabel>
@@ -225,27 +354,48 @@ const DetallePublicacionPage: React.FC = () => {
             </IonItem>
           </IonList>
 
+          {resenas.length > 0 && (
+            <>
+              <h2 className="titulo-seccion">Últimas reseñas del vendedor</h2>
+              {resenas.slice(0, 3).map((resena) => (
+                <article className="resena" key={resena.id}>
+                  <div className="resena__cabecera">
+                    <strong>{resena.evaluador.nombreUsuario}</strong>
+                    <IonBadge color="secondary">★ {resena.puntaje}</IonBadge>
+                  </div>
+                  <p className="operacion__meta">
+                    {resena.publicacion.titulo} · {formatearFecha(resena.fecha)}
+                  </p>
+                  {resena.comentario && <p className="resena__texto">{resena.comentario}</p>}
+                </article>
+              ))}
+            </>
+          )}
+
           <div className="detalle__acciones">
             <IonButton
               expand="block"
-              disabled={!disponible || esPropia}
+              disabled={!disponible || esPropia || esAdministrador || enviandoSolicitud}
               onClick={iniciarSolicitud}
             >
-              Comprar
+              {enviandoSolicitud ? <IonSpinner name="crescent" /> : 'Comprar'}
             </IonButton>
             <IonButton
               expand="block"
-              fill="outline"
-              onClick={() => setAviso('Los favoritos se incorporan en la próxima entrega (RF-05).')}
+              fill={esFavorito ? 'solid' : 'outline'}
+              color={esFavorito ? 'danger' : 'primary'}
+              disabled={esAdministrador || actualizandoFavorito}
+              onClick={() => void alternarFavorito()}
             >
-              <IonIcon slot="start" icon={heartOutline} />
-              Favorito
+              <IonIcon slot="start" icon={esFavorito ? heart : heartOutline} />
+              {esFavorito ? 'En favoritos' : 'Favorito'}
             </IonButton>
             <IonButton
               expand="block"
               fill="clear"
               color="medium"
-              onClick={() => setAviso('El reporte de publicaciones se incorpora en la próxima entrega (RF-09).')}
+              disabled={esPropia || esAdministrador}
+              onClick={abrirReporte}
             >
               <IonIcon slot="start" icon={flagOutline} />
               Reportar
@@ -263,7 +413,13 @@ const DetallePublicacionPage: React.FC = () => {
 
           {esPropia && (
             <IonText color="medium" className="detalle__aviso">
-              <p className="nota">Esta es una de tus publicaciones, por eso no puedes comprarla.</p>
+              <p className="nota">Esta es una de tus publicaciones, por eso no puedes comprarla ni reportarla.</p>
+            </IonText>
+          )}
+
+          {esAdministrador && (
+            <IonText color="medium" className="detalle__aviso">
+              <p className="nota">La cuenta de administración modera desde el panel administrativo.</p>
             </IonText>
           )}
         </div>
@@ -273,7 +429,14 @@ const DetallePublicacionPage: React.FC = () => {
           vendedor={vendedor}
           abierto={modalCompra}
           onCerrar={() => setModalCompra(false)}
-          onConfirmar={confirmarSolicitud}
+          onConfirmar={(modalidad) => void confirmarSolicitud(modalidad)}
+        />
+
+        <ModalReportarPublicacion
+          publicacion={publicacion}
+          abierto={modalReporte}
+          onCerrar={() => setModalReporte(false)}
+          onEnviado={(mensaje) => setAviso(mensaje)}
         />
 
         <IonToast

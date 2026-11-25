@@ -1,15 +1,16 @@
 /**
  * Estado de sesión compartido por toda la aplicación (FT-02, FT-03, RNF-SEG-01).
- * Las páginas y el menú consultan aquí quién está autenticado; las rutas protegidas lo usan
- * para decidir si redirigen a /login.
  */
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import type { Credenciales, DatosRegistro, Usuario } from '../models';
+import { EVENTO_SESION_EXPIRADA } from '../services/api';
 import {
+  actualizarUsuarioGuardado,
   cerrarSesion as cerrarSesionServicio,
   iniciarSesion as iniciarSesionServicio,
   leerSesion,
   registrar as registrarServicio,
+  verificarSesion,
 } from '../services/autenticacionService';
 
 interface ValorSesion {
@@ -19,17 +20,30 @@ interface ValorSesion {
   iniciarSesion: (credenciales: Credenciales) => Promise<Usuario>;
   registrar: (datos: DatosRegistro) => Promise<Usuario>;
   cerrarSesion: () => void;
+  actualizarUsuario: (usuario: Usuario) => void;
 }
 
 const SesionContext = createContext<ValorSesion | undefined>(undefined);
 
 export const SesionProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [usuario, setUsuario] = useState<Usuario | null>(null);
+  const [usuario, setUsuario] = useState<Usuario | null>(leerSesion);
   const [cargando, setCargando] = useState(true);
 
   useEffect(() => {
-    setUsuario(leerSesion());
-    setCargando(false);
+    let vigente = true;
+    verificarSesion().then((verificado) => {
+      if (vigente) {
+        setUsuario(verificado);
+        setCargando(false);
+      }
+    });
+
+    const alExpirar = () => setUsuario(null);
+    window.addEventListener(EVENTO_SESION_EXPIRADA, alExpirar);
+    return () => {
+      vigente = false;
+      window.removeEventListener(EVENTO_SESION_EXPIRADA, alExpirar);
+    };
   }, []);
 
   const iniciarSesion = useCallback(async (credenciales: Credenciales) => {
@@ -49,9 +63,14 @@ export const SesionProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     setUsuario(null);
   }, []);
 
+  const actualizarUsuario = useCallback((actualizado: Usuario) => {
+    actualizarUsuarioGuardado(actualizado);
+    setUsuario(actualizado);
+  }, []);
+
   const valor = useMemo<ValorSesion>(
-    () => ({ usuario, cargando, iniciarSesion, registrar, cerrarSesion }),
-    [usuario, cargando, iniciarSesion, registrar, cerrarSesion],
+    () => ({ usuario, cargando, iniciarSesion, registrar, cerrarSesion, actualizarUsuario }),
+    [usuario, cargando, iniciarSesion, registrar, cerrarSesion, actualizarUsuario],
   );
 
   return <SesionContext.Provider value={valor}>{children}</SesionContext.Provider>;

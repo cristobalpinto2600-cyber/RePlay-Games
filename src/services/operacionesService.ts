@@ -1,13 +1,8 @@
 /**
- * Consulta de compras y ventas del usuario (RF-06, RF-07).
- * En EP1 las operaciones son datos estáticos: la solicitud de compra del detalle muestra la
- * confirmación y el resumen, pero no crea registros nuevos.
+ * Solicitudes de compra y seguimiento de operaciones contra la API REST (RF-06, RF-07).
  */
-import { OPERACIONES } from '../data/operaciones';
-import { PUBLICACIONES } from '../data/publicaciones';
-import type { EstadoOperacion, Operacion, Publicacion, Usuario } from '../models';
-import { demora } from '../utils/demora';
-import { obtenerUsuarioLocal } from './usuariosService';
+import type { EstadoOperacion, ModalidadEntrega, Operacion, Publicacion, Usuario } from '../models';
+import { solicitar } from './api';
 
 /** Operación junto con la información que la vista necesita mostrar. */
 export interface OperacionDetallada {
@@ -22,38 +17,49 @@ export interface OperacionesDelUsuario {
   ventas: OperacionDetallada[];
 }
 
-function detallar(operacion: Operacion, usuarioId: string): OperacionDetallada | null {
-  const publicacion = PUBLICACIONES.find((item) => item.id === operacion.publicacionId);
-  const esComprador = operacion.compradorId === usuarioId;
-  const contraparte = obtenerUsuarioLocal(esComprador ? operacion.vendedorId : operacion.compradorId);
-
-  if (!publicacion || !contraparte) {
-    return null;
-  }
-  return {
-    operacion,
-    publicacion,
-    contraparte,
-    rolUsuario: esComprador ? 'comprador' : 'vendedor',
-  };
+/** Acción que la persona puede realizar sobre una operación según su rol y el estado actual. */
+export interface AccionOperacion {
+  estado: Exclude<EstadoOperacion, 'pendiente'>;
+  texto: string;
+  color: string;
 }
 
-/** Separa las operaciones del usuario en compras y ventas, de la más reciente a la más antigua. */
-export async function listarOperaciones(usuarioId: string): Promise<OperacionesDelUsuario> {
-  await demora();
-  const ordenadas = [...OPERACIONES].sort((a, b) => b.fechaCreacion.localeCompare(a.fechaCreacion));
+/** Compras y ventas del usuario autenticado, de la más reciente a la más antigua. */
+export function listarOperaciones(): Promise<OperacionesDelUsuario> {
+  return solicitar<OperacionesDelUsuario>('/operaciones');
+}
 
-  const detalladas = ordenadas
-    .filter(
-      (operacion) => operacion.compradorId === usuarioId || operacion.vendedorId === usuarioId,
-    )
-    .map((operacion) => detallar(operacion, usuarioId))
-    .filter((item): item is OperacionDetallada => item !== null);
+/** Crea la solicitud de compra; queda pendiente de confirmación del vendedor. */
+export function crearOperacion(
+  publicacionId: number,
+  modalidadEntrega: ModalidadEntrega,
+): Promise<OperacionDetallada> {
+  return solicitar<OperacionDetallada>('/operaciones', 'POST', { publicacionId, modalidadEntrega });
+}
 
-  return {
-    compras: detalladas.filter((item) => item.rolUsuario === 'comprador'),
-    ventas: detalladas.filter((item) => item.rolUsuario === 'vendedor'),
-  };
+export function cambiarEstadoOperacion(
+  id: number,
+  estado: AccionOperacion['estado'],
+): Promise<OperacionDetallada> {
+  return solicitar<OperacionDetallada>(`/operaciones/${id}/estado`, 'PATCH', { estado });
+}
+
+/**
+ * Mismas reglas que valida el backend: el vendedor confirma, completa o cancela; el comprador solo
+ * puede cancelar mientras la solicitud está pendiente.
+ */
+export function accionesDisponibles({ operacion, rolUsuario }: OperacionDetallada): AccionOperacion[] {
+  const cancelar: AccionOperacion = { estado: 'cancelada', texto: 'Cancelar', color: 'medium' };
+  if (rolUsuario === 'vendedor') {
+    if (operacion.estado === 'pendiente') {
+      return [{ estado: 'confirmada', texto: 'Confirmar', color: 'primary' }, cancelar];
+    }
+    if (operacion.estado === 'confirmada') {
+      return [{ estado: 'completada', texto: 'Marcar completada', color: 'success' }, cancelar];
+    }
+    return [];
+  }
+  return operacion.estado === 'pendiente' ? [cancelar] : [];
 }
 
 /** Color del badge según el estado de la operación (RNF-UX-02: mismos estados, mismos colores). */

@@ -1,14 +1,34 @@
-/** Consultas sobre usuarios: datos públicos y reputación del vendedor (RF-02). */
-import { USUARIOS } from '../data/usuarios';
+/** Perfil propio, datos públicos del vendedor (RF-02) y gestión administrativa de usuarios. */
 import type { Usuario } from '../models';
-import { demora } from '../utils/demora';
+import { ErrorApi, solicitar } from './api';
 
-export async function obtenerUsuario(id: string): Promise<Usuario | undefined> {
-  await demora(120);
-  return USUARIOS.find((usuario) => usuario.id === id);
+export interface DatosPerfil {
+  nombreUsuario?: string;
+  region?: string | null;
+  comuna?: string | null;
 }
 
-/** Versión sincrónica para listados donde ya se dispone del identificador. */
-export function obtenerUsuarioLocal(id: string): Usuario | undefined {
-  return USUARIOS.find((usuario) => usuario.id === id);
+export async function obtenerUsuario(id: number): Promise<Usuario | undefined> {
+  try {
+    return await solicitar<Usuario>(`/usuarios/${id}`);
+  } catch (error) {
+    if (error instanceof ErrorApi && error.estado === 404) {
+      return undefined;
+    }
+    throw error;
+  }
+}
+
+export function actualizarPerfil(datos: DatosPerfil): Promise<Usuario> {
+  return solicitar<Usuario>('/usuarios/perfil', 'PATCH', datos);
+}
+
+/** Solo administrador. */
+export function listarUsuarios(): Promise<Usuario[]> {
+  return solicitar<Usuario[]>('/usuarios');
+}
+
+/** Solo administrador: una cuenta desactivada no puede iniciar sesión. */
+export function cambiarEstadoUsuario(id: number, activo: boolean): Promise<Usuario> {
+  return solicitar<Usuario>(`/usuarios/${id}/estado`, 'PATCH', { activo });
 }
